@@ -7,7 +7,7 @@ We hope to create an addon similar to [ofxFaceTracker](https://github.com/kylemc
 
 
 The addon should be able to:
-- receive any ofImage or ofPixel 
+- receive any ofImage, ofPixel or cv::Mat
 - find all faces
 - collect all landmarks and provide their 2D and 3D points
 - label each face with an id
