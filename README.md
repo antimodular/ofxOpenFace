@@ -12,3 +12,4 @@ The addon should be able to:
 - collect all landmarks and provide their 2D and 3D points
 - label each face with an id
 - provide the age of each label
+- for tracking the faces over consecutive frame one could use Kyle’s [ofxCv tracker](https://github.com/kylemcdonald/ofxCv/blob/master/libs/ofxCv/include/ofxCv/Tracker.h)
