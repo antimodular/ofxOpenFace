@@ -8,7 +8,7 @@
 
 #pragma once
 
-class ofxOpenFace.h {
+class ofxOpenFace {
 
     public:
         int                 nTmp;   // WIP
