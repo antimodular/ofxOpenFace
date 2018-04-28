@@ -13,11 +13,11 @@ common:
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
 	# specified here separated by spaces or one per line using +=
-	ADDON_INCLUDES = libs/dlib/include/
-	ADDON_INCLUDES += libs/FaceAnalyser/include
+	ADDON_INCLUDES = libs/FaceAnalyser/include
 	ADDON_INCLUDES += libs/GazeAnalyser/include
     	ADDON_INCLUDES += libs/LandmarkDetector/include
     	ADDON_INCLUDES += libs/Utilities/include
+	#ADDON_INCLUDES += libs/dlib/include/
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
@@ -72,11 +72,11 @@ android/armeabi-v7a:
 
 osx:
 	# Required libraries
-	ADDON_LIBS = libs/dlib/libs/osx/libdlib.a
-	ADDON_LIBS += libs/FaceAnalyser/libs/osx/libFaceAnalyser.a
-	ADDON_LIBS += libs/GazeAnalyser/libs/osx/libGazeAnalyser.a
-	ADDON_LIBS += libs/LandmarkDetector/libs/osx/libLandmarkDetector.a
-	ADDON_LIBS += libs/Utilities/libs/osx/libUtilities.a
+	ADDON_LIBS = libs/FaceAnalyser/lib/osx/libFaceAnalyser.a
+	ADDON_LIBS += libs/GazeAnalyser/lib/osx/libGazeAnalyser.a
+	ADDON_LIBS += libs/LandmarkDetector/lib/osx/libLandmarkDetector.a
+	ADDON_LIBS += libs/Utilities/lib/osx/libUtilities.a
+	#ADDON_LIBS += libs/dlib/lib/osx/libdlib.a
 
 ios:
 	#nothing yet
