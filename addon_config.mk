@@ -17,7 +17,10 @@ common:
 	ADDON_INCLUDES += libs/GazeAnalyser/include
     	ADDON_INCLUDES += libs/LandmarkDetector/include
     	ADDON_INCLUDES += libs/Utilities/include
-	#ADDON_INCLUDES += libs/dlib/include/
+    	ADDON_INCLUDES += libs/tbb/include
+    	ADDON_INCLUDES += libs/opencv3.4.1/include
+	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
+	ADDON_INCLUDES += libs_others/dlib/include
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
@@ -76,7 +79,25 @@ osx:
 	ADDON_LIBS += libs/GazeAnalyser/lib/osx/libGazeAnalyser.a
 	ADDON_LIBS += libs/LandmarkDetector/lib/osx/libLandmarkDetector.a
 	ADDON_LIBS += libs/Utilities/lib/osx/libUtilities.a
-	#ADDON_LIBS += libs/dlib/lib/osx/libdlib.a
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_calib3d.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_core.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_dnn.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_features2d.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_flann.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_highgui.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_imgcodecs.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_imgproc.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_ml.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_objdetect.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_photo.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_shape.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_stitching.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_superres.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_video.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_videoio.dylib
+	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_videostab.dylib
+	ADDON_LIBS += libs_others/dlib/lib/osx/libdlib.a
+    	ADDON_LIBS += libs/tbb/lib/osx/libtbb.dylib
 
 ios:
 	#nothing yet
