@@ -61,7 +61,6 @@ void ofxOpenFace::update(ofImage &img) {
     pVisualizer->SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model), LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy), pFace_model->detection_certainty);
 }
 
-
 void ofxOpenFace::draw() {
     ofSetColor(ofColor::white);
     // Draw the visualization
@@ -69,6 +68,13 @@ void ofxOpenFace::draw() {
     ofImage imgVisualized;
     ofxCv::toOf(matVisualized, imgVisualized);
     imgVisualized.draw(20, 20);
+}
+
+void ofxOpenFace::exit() {
+    // Clear memory
+    delete pFace_model;
+    delete pDet_parameters;
+    delete pVisualizer;
 }
 
 void ofxOpenFace::resetFaceModel() {

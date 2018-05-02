@@ -35,6 +35,7 @@ class ofxOpenFace {
         void setup(int nWidth, int nHeight);
         void update(ofImage &img);
         void draw();
+        void exit();
         void resetFaceModel();
     
     private:
