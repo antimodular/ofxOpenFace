@@ -1,7 +1,9 @@
 #include "ofxOpenFace.h"
 
-void ofxOpenFace::setup() {
-    imgGrayScale.allocate(640, 480, ofImageType::OF_IMAGE_GRAYSCALE);
+void ofxOpenFace::setup(int nWidth, int nHeight) {
+    nImgWidth = nWidth;
+    nImgHeight = nHeight;
+    imgGrayScale.allocate(nImgWidth, nImgHeight, ofImageType::OF_IMAGE_GRAYSCALE);
     
     // Set up OpenFace
     vector<string> arguments;
@@ -28,8 +30,8 @@ void ofxOpenFace::update(ofImage &img) {
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
     float fx = 500.0f;
     float fy = 500.0f;
-    float cx = 640.0f/2.0f;
-    float cy = 480.0f/2.0f;
+    float cx = (float)nImgWidth/2.0f;
+    float cy = (float)nImgHeight/2.0f;
     
     // Reading the images
     cv::Mat captured_image = ofxCv::toCv(img.getPixels());
@@ -61,12 +63,12 @@ void ofxOpenFace::update(ofImage &img) {
 
 
 void ofxOpenFace::draw() {
+    ofSetColor(ofColor::white);
     // Draw the visualization
     cv::Mat matVisualized = pVisualizer->GetVisImage();
     ofImage imgVisualized;
     ofxCv::toOf(matVisualized, imgVisualized);
     imgVisualized.draw(20, 20);
-    imgGrayScale.draw(20 + 640, 20);
 }
 
 void ofxOpenFace::resetFaceModel() {

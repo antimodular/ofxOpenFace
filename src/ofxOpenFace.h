@@ -32,12 +32,14 @@
 
 class ofxOpenFace {
     public:
-        void setup();
+        void setup(int nWidth, int nHeight);
         void update(ofImage &img);
         void draw();
         void resetFaceModel();
     
     private:
+        int                                     nImgWidth;   // the width of the image used for tracking
+        int                                     nImgHeight;  // the height of the image used for tracking
         ofImage                                 imgGrayScale;
         LandmarkDetector::CLNF*                 pFace_model = nullptr;
         LandmarkDetector::FaceModelParameters*  pDet_parameters = nullptr;
