@@ -33,8 +33,9 @@
 class ofxOpenFace {
     public:
         void setup(int nWidth, int nHeight);
-        void update(ofImage &img);
-        void update(cv::Mat &mat);
+        void update(ofImage& img);
+        void update(cv::Mat& mat);
+        void update(ofPixels& pix);
         void draw();
         void exit();
         void resetFaceModel();

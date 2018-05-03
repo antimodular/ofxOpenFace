@@ -63,7 +63,11 @@ void ofxOpenFace::update(cv::Mat &mat) {
 }
 
 void ofxOpenFace::update(ofImage &img) {
-    cv::Mat captured_image = ofxCv::toCv(img.getPixels());
+    update(img.getPixels());
+}
+
+void ofxOpenFace::update(ofPixels& pix) {
+    cv::Mat captured_image = ofxCv::toCv(pix);
     update(captured_image);
 }
 
