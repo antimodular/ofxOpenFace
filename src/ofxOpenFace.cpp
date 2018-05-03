@@ -39,27 +39,32 @@ void ofxOpenFace::update(cv::Mat &mat) {
     cv::Mat grayscale_image = ofxCv::toCv(imgGrayScale.getPixels());
     
     // The actual facial landmark detection / tracking
-    bool detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
+    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
     
     // Gaze tracking, absolute gaze direction
     cv::Point3f gazeDirection0(0, 0, -1);
     cv::Point3f gazeDirection1(0, 0, -1);
     
     // If tracking succeeded and we have an eye model, estimate gaze
-    if (detection_success && pFace_model->eye_model)
+    if (faceData.detected && pFace_model->eye_model)
     {
         GazeAnalysis::EstimateGaze(*pFace_model, gazeDirection0, fx, fy, cx, cy, true);
         GazeAnalysis::EstimateGaze(*pFace_model, gazeDirection1, fx, fy, cx, cy, false);
+        faceData.gazeLeftEye = gazeDirection0;
+        faceData.gazeRightEye = gazeDirection1;
     }
+    faceData.certainty = pFace_model->detection_certainty;
     
     // Work out the pose of the head from the tracked model
-    cv::Vec6d pose_estimate = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
+    faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
     
     // Displaying the tracking visualizations
     pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-    pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, pFace_model->detection_certainty, pFace_model->GetVisibilities());
-    pVisualizer->SetObservationPose(pose_estimate, pFace_model->detection_certainty);
-    pVisualizer->SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model), LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy), pFace_model->detection_certainty);
+    pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
+    pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
+    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
+    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
+    pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
 }
 
 void ofxOpenFace::update(ofImage &img) {
@@ -74,9 +79,8 @@ void ofxOpenFace::update(ofPixels& pix) {
 void ofxOpenFace::draw() {
     ofSetColor(ofColor::white);
     // Draw the visualization
-    cv::Mat matVisualized = pVisualizer->GetVisImage();
     ofImage imgVisualized;
-    ofxCv::toOf(matVisualized, imgVisualized);
+    ofxCv::toOf(pVisualizer->GetVisImage(), imgVisualized);
     imgVisualized.draw(20, 20);
 }
 
@@ -89,4 +93,8 @@ void ofxOpenFace::exit() {
 
 void ofxOpenFace::resetFaceModel() {
     pFace_model->Reset();    
+}
+
+const OpenFaceData& ofxOpenFace::getFaceData() {
+    return faceData;
 }

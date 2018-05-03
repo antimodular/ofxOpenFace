@@ -30,6 +30,17 @@
 
 #pragma once
 
+class OpenFaceData {
+    public:
+        bool                    detected;
+        cv::Point3f             gazeLeftEye;
+        cv::Point3f             gazeRightEye;
+        cv::Vec6d               pose;
+        vector<cv::Point2d>     eyeLandmarks2D;
+        vector<cv::Point3d>     eyeLandmarks3D;
+        double                  certainty;
+};
+
 class ofxOpenFace {
     public:
         void setup(int nWidth, int nHeight);
@@ -39,6 +50,7 @@ class ofxOpenFace {
         void draw();
         void exit();
         void resetFaceModel();
+        const OpenFaceData& getFaceData();
     
     private:
         int                                     nImgWidth;   // the width of the image used for tracking
@@ -47,4 +59,5 @@ class ofxOpenFace {
         LandmarkDetector::CLNF*                 pFace_model = nullptr;
         LandmarkDetector::FaceModelParameters*  pDet_parameters = nullptr;
         Utilities::Visualizer*                  pVisualizer = nullptr;
+        OpenFaceData                            faceData;
 };
