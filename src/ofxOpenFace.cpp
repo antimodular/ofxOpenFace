@@ -23,8 +23,9 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
     pVisualizer = new Utilities::Visualizer(true, false, false, false);
 }
 
-void ofxOpenFace::update(ofImage &img) {
-    imgGrayScale.clone(img);
+void ofxOpenFace::update(cv::Mat &mat) {
+    // Generate grayscale from img
+    ofxCv::toOf(mat, imgGrayScale);
     imgGrayScale.setImageType(ofImageType::OF_IMAGE_GRAYSCALE);
     
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
@@ -34,7 +35,7 @@ void ofxOpenFace::update(ofImage &img) {
     float cy = (float)nImgHeight/2.0f;
     
     // Reading the images
-    cv::Mat captured_image = ofxCv::toCv(img.getPixels());
+    cv::Mat captured_image = mat;
     cv::Mat grayscale_image = ofxCv::toCv(imgGrayScale.getPixels());
     
     // The actual facial landmark detection / tracking
@@ -59,6 +60,11 @@ void ofxOpenFace::update(ofImage &img) {
     pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, pFace_model->detection_certainty, pFace_model->GetVisibilities());
     pVisualizer->SetObservationPose(pose_estimate, pFace_model->detection_certainty);
     pVisualizer->SetObservationGaze(gazeDirection0, gazeDirection1, LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model), LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy), pFace_model->detection_certainty);
+}
+
+void ofxOpenFace::update(ofImage &img) {
+    cv::Mat captured_image = ofxCv::toCv(img.getPixels());
+    update(captured_image);
 }
 
 void ofxOpenFace::draw() {
