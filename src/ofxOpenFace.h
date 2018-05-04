@@ -47,16 +47,14 @@ class ofxOpenFace : public ofThread {
         ofxOpenFace();
         ~ofxOpenFace();
         void setup(int nWidth, int nHeight);
-        void processImage(cv::Mat mat);
+        void processImage();
         void setImage(ofImage img);
-        void setImage(cv::Mat mat);
-        void setImage(ofPixels pix);
-        void draw(int x, int y);
         void exit();
         void stop();
         void resetFaceModel();
-        const OpenFaceData& getFaceData();
         int getFPS();
+    
+        static ofEvent<OpenFaceData>            eventDataReady;
     
     private:
         virtual void                            threadedFunction();
@@ -64,18 +62,16 @@ class ofxOpenFace : public ofThread {
     
         int                                     nImgWidth;   // the width of the image used for tracking
         int                                     nImgHeight;  // the height of the image used for tracking
-        ofImage                                 imgGrayScale;
-        ofImage                                 imgVisualized;
         LandmarkDetector::CLNF*                 pFace_model = nullptr;
         LandmarkDetector::FaceModelParameters*  pDet_parameters = nullptr;
         Utilities::Visualizer*                  pVisualizer = nullptr;
-        OpenFaceData                            faceData;
         bool                                    bExit = false; // flag to close the thread
         float                                   fFPS = 0.0f; // thread frame rate
         ofMutex                                 mutexFPS;
         ofMutex                                 mutexImage;
-        ofMutex                                 mutexVisualizer;
         float                                   fTimePerRunMs = 0.0f;
         bool                                    bHaveNewImage = false; // there is a new image available
-        cv::Mat                                 matToProcess; // the material to process for tracking
+        cv::Mat                                 matToProcessColor; // the material to process for tracking
+        cv::Mat                                 matToProcessGrayScale; // the material to process for tracking
+        bool                                    bDoVisualizer; // set to true to generate the visualizer image
 };

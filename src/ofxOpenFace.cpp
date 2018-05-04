@@ -1,5 +1,7 @@
 #include "ofxOpenFace.h"
 
+ofEvent<OpenFaceData> ofxOpenFace::eventDataReady = ofEvent<OpenFaceData>();
+
 // Constructor
 ofxOpenFace::ofxOpenFace(){
 }
@@ -12,8 +14,6 @@ ofxOpenFace::~ofxOpenFace(){
 void ofxOpenFace::setup(int nWidth, int nHeight) {
     nImgWidth = nWidth;
     nImgHeight = nHeight;
-    imgGrayScale.allocate(nImgWidth, nImgHeight, ofImageType::OF_IMAGE_COLOR);
-    imgVisualized.allocate(nImgWidth, nImgHeight, ofImageType::OF_IMAGE_COLOR);
     
     // Set up OpenFace
     vector<string> arguments;
@@ -29,15 +29,12 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
         ofLogError("No eye model found.");
     }
     
-    // A utility for visualizing the results (show just the tracks)
+    // A utility for visualizing the results
     pVisualizer = new Utilities::Visualizer(true, false, false, false);
+    bDoVisualizer = false;
 }
 
-void ofxOpenFace::processImage(cv::Mat mat) {
-    // Generate grayscale from img
-    //ofxCv::toOf(mat, imgGrayScale);
-    //imgGrayScale.setImageType(ofImageType::OF_IMAGE_GRAYSCALE);
-    
+void ofxOpenFace::processImage() {
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
     float fx = 500.0f;
     float fy = 500.0f;
@@ -45,12 +42,12 @@ void ofxOpenFace::processImage(cv::Mat mat) {
     float cy = (float)nImgHeight/2.0f;
     
     // Reading the images
-    cv::Mat captured_image = mat;
-    //cv::Mat grayscale_image = ofxCv::toCv(imgGrayScale.getPixels());
+    cv::Mat captured_image = matToProcessColor;
+    cv::Mat grayscale_image = matToProcessGrayScale;
     
     // The actual facial landmark detection / tracking
-    //faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
-    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(captured_image, *pFace_model, *pDet_parameters);
+    OpenFaceData faceData;
+    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
     
     // If tracking succeeded and we have an eye model, estimate gaze
     if (faceData.detected && pFace_model->eye_model)
@@ -63,45 +60,27 @@ void ofxOpenFace::processImage(cv::Mat mat) {
     // Work out the pose of the head from the tracked model
     faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
     
-    // Displaying the tracking visualizations
-    mutexVisualizer.lock();
-    pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-    pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
-    pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
-    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
-    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
-    pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
-    mutexVisualizer.unlock();
-}
-
-void ofxOpenFace::setImage(cv::Mat mat) {
-    mutexImage.lock();
-    // Override the current "next image"
-    matToProcess = mat;
-    bHaveNewImage = true;
-    mutexImage.unlock();
+    if (bDoVisualizer) {
+        // Displaying the tracking visualizations
+        pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
+        pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
+        pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
+        faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
+        faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
+        pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
+    }
+    
+    ofNotifyEvent(eventDataReady, faceData);
 }
 
 void ofxOpenFace::setImage(ofImage img) {
-    img.setImageType(ofImageType::OF_IMAGE_GRAYSCALE);
-    setImage(img.getPixels());
-}
-
-void ofxOpenFace::setImage(ofPixels pix) {
     mutexImage.lock();
     // Override the current "next image"
-    matToProcess = ofxCv::toCv(pix);
+    matToProcessColor = ofxCv::toCv(img.getPixels());
+    img.setImageType(ofImageType::OF_IMAGE_GRAYSCALE);
+    matToProcessGrayScale = ofxCv::toCv(img.getPixels());
     bHaveNewImage = true;
     mutexImage.unlock();
-}
-
-void ofxOpenFace::draw(int x, int y) {
-    ofSetColor(ofColor::white);
-    // Draw the visualization
-    mutexVisualizer.lock();
-    ofxCv::toOf(pVisualizer->GetVisImage(), imgVisualized);
-    imgVisualized.draw(x, y);
-    mutexVisualizer.unlock();
 }
 
 void ofxOpenFace::stop() {
@@ -122,10 +101,6 @@ void ofxOpenFace::resetFaceModel() {
     pFace_model->Reset();    
 }
 
-const OpenFaceData& ofxOpenFace::getFaceData() {
-    return faceData;
-}
-
 void ofxOpenFace::threadedFunction() {
     thread.setName("ofxOpenFace " + thread.name());
     ofLogNotice("ofxOpenFace", "Thread started.");
@@ -140,7 +115,7 @@ void ofxOpenFace::threadedFunction() {
         } else {
             //ofLogNotice("ofxOpenFace", "New image to process.");
             mutexImage.lock();
-            processImage(matToProcess);
+            processImage();
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
         }
