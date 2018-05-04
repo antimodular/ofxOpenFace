@@ -59,14 +59,14 @@ void ofxOpenFace::processImage() {
     
     // Work out the pose of the head from the tracked model
     faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
+    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
+    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
     
     if (bDoVisualizer) {
         // Displaying the tracking visualizations
         pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
         pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
         pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
-        faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
-        faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
         pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
     }
     
