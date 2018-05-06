@@ -21,6 +21,7 @@ common:
     	ADDON_INCLUDES += libs/opencv3.4.1/include
 	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
 	ADDON_INCLUDES += libs_others/dlib/include
+    	ADDON_INCLUDES += ../libs/tbb/include
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
