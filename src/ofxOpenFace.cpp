@@ -19,10 +19,10 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
     bMultipleFaces = bTrackMultipleFaces;
     
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
-    float fx = 500.0f;
-    float fy = 500.0f;
-    float cx = (float)nImgWidth/2.0f;
-    float cy = (float)nImgHeight/2.0f;
+    fx = 500.0f;
+    fy = 500.0f;
+    cx = (float)nImgWidth/2.0f;
+    cy = (float)nImgHeight/2.0f;
     
     if (bMultipleFaces) {
         setupMultipleFaces();
@@ -114,8 +114,8 @@ void ofxOpenFace::processImageSingleFace() {
      // If tracking succeeded and we have an eye model, estimate gaze
      if (faceData.detected && pFace_model->eye_model)
      {
-     GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
-     GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
+         GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
+         GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
      }
      faceData.certainty = pFace_model->detection_certainty;
      
@@ -126,11 +126,11 @@ void ofxOpenFace::processImageSingleFace() {
      faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(*pFace_model);
      
      if (bDoVisualizer) {
-     // Displaying the tracking visualizations
-     pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-     pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
-     pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
-     pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
+         // Displaying the tracking visualizations
+         pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
+         pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
+         pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
+         pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
      }
      ofNotifyEvent(eventDataReady, faceData);
 }
