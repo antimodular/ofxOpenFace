@@ -12,9 +12,11 @@ ofxOpenFace::~ofxOpenFace(){
     waitForThread(true);
 }
 
-void ofxOpenFace::setup(int nWidth, int nHeight) {
+void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
     nImgWidth = nWidth;
     nImgHeight = nHeight;
+    
+    bMultipleFaces = bTrackMultipleFaces;
     
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
     float fx = 500.0f;
@@ -22,6 +24,34 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
     float cx = (float)nImgWidth/2.0f;
     float cy = (float)nImgHeight/2.0f;
     
+    if (bMultipleFaces) {
+        setupMultipleFaces();
+    } else {
+        setupSingleFace();
+    }
+}
+
+void ofxOpenFace::setupSingleFace() {
+    // Set up OpenFace
+    vector<string> arguments;
+    arguments.push_back("-device");
+    arguments.push_back("0");
+    pDet_parameters = new LandmarkDetector::FaceModelParameters(arguments);
+    
+    // The modules that are being used for tracking
+    string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
+    pFace_model = new LandmarkDetector::CLNF(modelLocation);
+    
+    if (!pFace_model->eye_model) {
+        ofLogError("ofxOpenFace", "No eye model found.");
+    }
+    
+    // A utility for visualizing the results
+    pVisualizer = new Utilities::Visualizer(true, false, false, false);
+    bDoVisualizer = false;
+}
+
+void ofxOpenFace::setupMultipleFaces() {
     // Set up OpenFace
     string sAppRunDir = "/Users/bruno/DEV/of_v0.9.8_osx_release/apps/myApps/openFace/bin/data/dummy.txt";
     vector<string> arguments;
@@ -72,7 +102,40 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
     bDoVisualizer = false;
 }
 
-void ofxOpenFace::processImage() {
+void ofxOpenFace::processImageSingleFace() {
+    // Reading the images
+    cv::Mat captured_image = matToProcessColor;
+    cv::Mat grayscale_image = matToProcessGrayScale;
+    
+    // The actual facial landmark detection / tracking
+     OpenFaceData faceData;
+     faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
+     
+     // If tracking succeeded and we have an eye model, estimate gaze
+     if (faceData.detected && pFace_model->eye_model)
+     {
+     GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
+     GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
+     }
+     faceData.certainty = pFace_model->detection_certainty;
+     
+     // Work out the pose of the head from the tracked model
+     faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
+     faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
+     faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
+     faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(*pFace_model);
+     
+     if (bDoVisualizer) {
+     // Displaying the tracking visualizations
+     pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
+     pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
+     pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
+     pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
+     }
+     ofNotifyEvent(eventDataReady, faceData);
+}
+
+void ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
     cv::Mat captured_image = matToProcessColor;
     cv::Mat grayscale_image = matToProcessGrayScale;
@@ -224,35 +287,6 @@ void ofxOpenFace::processImage() {
     
     // Update the frame count
     nFrameCount++;
-    
-    // The actual facial landmark detection / tracking
-    /*
-    OpenFaceData faceData;
-    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
-    
-    // If tracking succeeded and we have an eye model, estimate gaze
-    if (faceData.detected && pFace_model->eye_model)
-    {
-        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
-        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
-    }
-    faceData.certainty = pFace_model->detection_certainty;
-    
-    // Work out the pose of the head from the tracked model
-    faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
-    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
-    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
-    faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(*pFace_model);
-    
-    if (bDoVisualizer) {
-        // Displaying the tracking visualizations
-        pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-        pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
-        pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
-        pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
-    }
-    ofNotifyEvent(eventDataReady, faceData);
-    */
 }
 
 void ofxOpenFace::setImage(ofImage img) {
@@ -300,7 +334,11 @@ void ofxOpenFace::threadedFunction() {
             //ofLogNotice("ofxOpenFace", "New image to process.");
             mutexImage.lock();
             nFrameCount = 0;
-            processImage();
+            if (bMultipleFaces) {
+                processImageMultipleFaces();
+            } else {
+                processImageSingleFace();
+            }
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
         }

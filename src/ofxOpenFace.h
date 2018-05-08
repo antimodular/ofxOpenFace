@@ -47,8 +47,7 @@ class ofxOpenFace : public ofThread {
     public:
         ofxOpenFace();
         ~ofxOpenFace();
-        void setup(int nWidth, int nHeight);
-        void processImage();
+        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight);
         void setImage(ofImage img);
         void exit();
         void stop();
@@ -58,9 +57,13 @@ class ofxOpenFace : public ofThread {
         static ofEvent<OpenFaceData>            eventDataReady;
     
     private:
-        virtual void                                    threadedFunction();
-        void                                            setFPS(float value);
-        static void                                     NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double>>& face_detections);
+        void setupSingleFace();
+        void setupMultipleFaces();
+        void processImageSingleFace();
+        void processImageMultipleFaces();
+        virtual void threadedFunction();
+        void setFPS(float value);
+        static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double>>& face_detections);
     
         int                                             fx, fy, cx, cy;
         int                                             nImgWidth;   // the width of the image used for tracking
@@ -68,7 +71,9 @@ class ofxOpenFace : public ofThread {
         int                                             nMaxFaces; // the maximum number of faces
         int                                             nFrameCount; // count the frames being tracked
         vector<LandmarkDetector::CLNF>                  vFace_models;
+        LandmarkDetector::CLNF*                         pFace_model = nullptr;
         vector<bool>                                    vActiveModels;
+        LandmarkDetector::FaceModelParameters*          pDet_parameters = nullptr;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
         Utilities::Visualizer*                          pVisualizer = nullptr;
         FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
@@ -78,6 +83,7 @@ class ofxOpenFace : public ofThread {
         ofMutex                                         mutexFPS;
         ofMutex                                         mutexImage;
         float                                           fTimePerRunMs = 0.0f;
+        bool                                            bMultipleFaces;
         bool                                            bHaveNewImage = false; // there is a new image available
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
