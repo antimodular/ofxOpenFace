@@ -23,7 +23,9 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
     float cy = (float)nImgHeight/2.0f;
     
     // Set up OpenFace
+    string sAppRunDir = "/Users/bruno/DEV/of_v0.9.8_osx_release/apps/myApps/openFace/bin/data/dummy.txt";
     vector<string> arguments;
+    arguments.push_back(sAppRunDir); // so that the FaceAnalyserParameters constructor can find the models in data/AU_predictors
     arguments.push_back("-device");
     arguments.push_back("0"); // not used because the image is sent via setImage
     auto det_params = LandmarkDetector::FaceModelParameters(arguments);
@@ -50,20 +52,11 @@ void ofxOpenFace::setup(int nWidth, int nHeight) {
         vDet_parameters.push_back(det_params);
     }
     
-    /*
-    int fps = 30;
-    pRecording_params = new Utilities::RecorderOpenFaceParameters(arguments, true, false, fx, fy, cx, cy, fps);
-    if (!face_model.eye_model)
-    {
-        pRecording_params->setOutputGaze(false);
-    }
-    pOpen_face_rec = new Utilities::RecorderOpenFace("ofxOpenFaceRecorder", *pRecording_params, arguments);
-    */
-    
     // Load facial feature extractor and AU analyser (make sure it is static, as we don't reidentify faces)
-    FaceAnalysis::FaceAnalyserParameters face_analysis_params(arguments);
-    face_analysis_params.OptimizeForImages();
-    pFace_analyser = new FaceAnalysis::FaceAnalyser(face_analysis_params);
+    pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters(arguments);
+    pFace_analysis_params->OptimizeForImages();
+    ofLogNotice("ofxOpenFace", "FaceAnalyserParameters model location: '" + pFace_analysis_params->getModelLoc() + "'");
+    pFace_analyser = new FaceAnalysis::FaceAnalyser(*pFace_analysis_params);
     
     if (!face_model.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
@@ -107,7 +100,6 @@ void ofxOpenFace::processImage() {
         {
             LandmarkDetector::DetectFaces(face_detections, grayscale_image, vFace_models[0].face_detector_HAAR);
         }
-        
     }
     
     // Keep only non overlapping detections (also convert to a concurrent vector
@@ -132,7 +124,6 @@ void ofxOpenFace::processImage() {
         // If the model is inactive reactivate it with new detections
         if(!vActiveModels[model])
         {
-            
             for(size_t detection_ind = 0; detection_ind < face_detections.size(); ++detection_ind)
             {
                 // if it was not taken by another tracker take it (if it is false swap it to true and enter detection, this makes it parallel safe)
@@ -159,10 +150,11 @@ void ofxOpenFace::processImage() {
             // The actual facial landmark detection / tracking
             detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, vFace_models[model], vDet_parameters[model]);
         }
+        
+        if (detection_success) {
+            ofLogNotice("ofxOpenFace", "Detection successful");
+        }
     });
-    
-    // Keeping track of FPS
-    //fps_tracker.AddFrame();
     
     if (bDoVisualizer) {
         pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
@@ -282,8 +274,6 @@ void ofxOpenFace::exit() {
     // Clear memory
     stop();
     waitForThread(true);
-    //delete pFace_model;
-    //delete pDet_parameters;
     delete pVisualizer;
 }
 

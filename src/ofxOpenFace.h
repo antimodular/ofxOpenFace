@@ -20,6 +20,9 @@
 #include <GazeEstimation.h>
 #include <FaceAnalyser.h>
 
+#include <fstream>
+#include <sstream>
+
 // OpenCV includes
 #include <opencv2/videoio/videoio.hpp>  // Video write
 #include <opencv2/videoio/videoio_c.h>  // Video write
@@ -68,8 +71,7 @@ class ofxOpenFace : public ofThread {
         vector<bool>                                    vActiveModels;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
         Utilities::Visualizer*                          pVisualizer = nullptr;
-        //Utilities::RecorderOpenFaceParameters*          pRecording_params = nullptr;
-        //Utilities::RecorderOpenFace*                    pOpen_face_rec = nullptr;
+        FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
         FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
         bool                                            bExit = false; // flag to close the thread
         float                                           fFPS = 0.0f; // thread frame rate
