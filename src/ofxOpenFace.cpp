@@ -14,7 +14,7 @@ ofxOpenFace::~ofxOpenFace(){
     waitForThread(true);
 }
 
-void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
+void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM) {
     nImgWidth = nWidth;
     nImgHeight = nHeight;
     
@@ -27,7 +27,7 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
     cy = (float)nImgHeight/2.0f;
     
     if (bMultipleFaces) {
-        setupMultipleFaces();
+        setupMultipleFaces(bUseHOGSVM);
     } else {
         setupSingleFace();
     }
@@ -35,9 +35,6 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
 }
 
 void ofxOpenFace::setupSingleFace() {
-    // Set up OpenFace
-    
-    // The modules that are being used for tracking
     string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
     face_model = LandmarkDetector::CLNF(modelLocation);
     
@@ -46,32 +43,38 @@ void ofxOpenFace::setupSingleFace() {
     }
 }
 
-void ofxOpenFace::setupMultipleFaces() {
+void ofxOpenFace::setupMultipleFaces(bool bUseHOGSVM) {
     string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
-    string detectorLocation = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
+    string detectorLocationHAAR = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
     
     // Set up OpenFace
     auto dp = LandmarkDetector::FaceModelParameters();
     dp.reinit_video_every = -1; // This is so that the model would not try re-initialising itself
-    dp.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+    if (bUseHOGSVM) {
+        dp.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+    } else {
+        dp.curr_face_detector = LandmarkDetector::FaceModelParameters::HAAR_DETECTOR;
+    }
     vDet_parameters.push_back(dp);
     
     // The modules that are being used for tracking
-    LandmarkDetector::CLNF fm = LandmarkDetector::CLNF(modelLocation);
-    fm.face_detector_HAAR.load(detectorLocation);
-    fm.face_detector_location = detectorLocation;
+    face_model = LandmarkDetector::CLNF(modelLocation);
+    if (!bUseHOGSVM) {
+        face_model.face_detector_HAAR.load(detectorLocationHAAR);
+        face_model.face_detector_location = detectorLocationHAAR;
+    }
     
     vFace_models.reserve(nMaxFaces);
-    vFace_models.push_back(fm);
+    vFace_models.push_back(face_model);
     vActiveModels.push_back(false);
     
     for (int i=1; i < nMaxFaces; i++) {
-        vFace_models.push_back(fm);
+        vFace_models.push_back(face_model);
         vActiveModels.push_back(false);
         vDet_parameters.push_back(dp);
     }
     
-    if (!fm.eye_model) {
+    if (!face_model.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
     }
 }

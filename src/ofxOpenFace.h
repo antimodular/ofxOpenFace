@@ -54,7 +54,7 @@ class ofxOpenFace : public ofThread {
     public:
         ofxOpenFace();
         ~ofxOpenFace();
-        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight);
+        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM);
         void setImage(ofImage img);
         void exit();
         void stop();
@@ -66,7 +66,7 @@ class ofxOpenFace : public ofThread {
     
     private:
         void setupSingleFace();
-        void setupMultipleFaces();
+        void setupMultipleFaces(bool bUseHOGSVM);
         void processImageSingleFace();
         void processImageMultipleFaces();
         virtual void threadedFunction();
