@@ -84,8 +84,6 @@ class ofxOpenFace : public ofThread {
         LandmarkDetector::FaceModelParameters*          pDet_parameters = nullptr;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
         Utilities::Visualizer*                          pVisualizer = nullptr;
-        FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
-        FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
         bool                                            bExit = false; // flag to close the thread
         float                                           fFPS = 0.0f; // thread frame rate
         ofMutex                                         mutexFPS;

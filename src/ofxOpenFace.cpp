@@ -35,10 +35,7 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
 
 void ofxOpenFace::setupSingleFace() {
     // Set up OpenFace
-    vector<string> arguments;
-    arguments.push_back("-device");
-    arguments.push_back("0");
-    pDet_parameters = new LandmarkDetector::FaceModelParameters(arguments);
+    pDet_parameters = new LandmarkDetector::FaceModelParameters();
     
     // The modules that are being used for tracking
     string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
@@ -54,13 +51,11 @@ void ofxOpenFace::setupSingleFace() {
 }
 
 void ofxOpenFace::setupMultipleFaces() {
+    string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
+    string detectorLocation = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
+    
     // Set up OpenFace
-    string sAppRunDir = "/Users/bruno/DEV/of_v0.9.8_osx_release/apps/myApps/openFace/bin/data/dummy.txt";
-    vector<string> arguments;
-    arguments.push_back(sAppRunDir); // so that the FaceAnalyserParameters constructor can find the models in data/AU_predictors
-    arguments.push_back("-device");
-    arguments.push_back("0"); // not used because the image is sent via setImage
-    auto det_params = LandmarkDetector::FaceModelParameters(arguments);
+    auto det_params = LandmarkDetector::FaceModelParameters();
     
     // This is so that the model would not try re-initialising itself
     det_params.reinit_video_every = -1;
@@ -68,8 +63,6 @@ void ofxOpenFace::setupMultipleFaces() {
     vDet_parameters.push_back(det_params);
     
     // The modules that are being used for tracking
-    string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
-    string detectorLocation = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
     LandmarkDetector::CLNF face_model = LandmarkDetector::CLNF(modelLocation);
     face_model.face_detector_HAAR.load(detectorLocation);
     face_model.face_detector_location = detectorLocation;
@@ -84,19 +77,8 @@ void ofxOpenFace::setupMultipleFaces() {
         vDet_parameters.push_back(det_params);
     }
     
-    // Load facial feature extractor and AU analyser (make sure it is static, as we don't reidentify faces)
-    pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters(arguments);
-    pFace_analysis_params->OptimizeForVideos();
-    ofLogNotice("ofxOpenFace", "FaceAnalyserParameters model location: '" + pFace_analysis_params->getModelLoc() + "'");
-    pFace_analyser = new FaceAnalysis::FaceAnalyser(*pFace_analysis_params);
-    
     if (!face_model.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
-    }
-    
-    if (pFace_analyser->GetAUClassNames().size() == 0 && pFace_analyser->GetAUClassNames().size() == 0)
-    {
-        ofLogError("ofxOpenFace", "No Action Unit models found.");
     }
     
     // A utility for visualizing the results
@@ -219,10 +201,6 @@ void ofxOpenFace::processImageMultipleFaces() {
             detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, vFace_models[model], vDet_parameters[model]);
         }
         
-        if (detection_success) {
-            ofLogNotice("ofxOpenFace", "Detection successful");
-        }
-        
         vData[model].detected = detection_success;
         vData[model].certainty = vFace_models[model].detection_certainty;
         vData[model].pose = LandmarkDetector::GetPose(vFace_models[model], fx, fy, cx, cy);
@@ -264,39 +242,13 @@ void ofxOpenFace::processImageMultipleFaces() {
                 cv::Mat sim_warped_img;
                 cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
                 
-                /*
-                // Perform AU detection and HOG feature extraction, as this can be expensive only compute it if needed by output or visualization
-                if (pRecording_params->outputAlignedFaces() || pRecording_params->outputHOG() || pRecording_params->outputAUs() || pVisualizer->vis_align || pVisualizer->vis_hog)
-                {
-                    pFace_analyser->PredictStaticAUsAndComputeFeatures(captured_image, vFace_models[model].detected_landmarks);
-                    pFace_analyser->GetLatestAlignedFace(sim_warped_img);
-                    pFace_analyser->GetLatestHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-                }
-                */
-                
                 // Visualize the features
                 pVisualizer->SetObservationFaceAlign(sim_warped_img);
                 pVisualizer->SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
                 pVisualizer->SetObservationLandmarks(vFace_models[model].detected_landmarks, vFace_models[model].detection_certainty);
                 pVisualizer->SetObservationPose(LandmarkDetector::GetPose(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
                 pVisualizer->SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
-                pVisualizer->SetObservationActionUnits(pFace_analyser->GetCurrentAUsReg(), pFace_analyser->GetCurrentAUsClass());
-                
-                /*
-                // Output features
-                pOpen_face_rec->SetObservationHOG(vFace_models[model].detection_success, hog_descriptor, num_hog_rows, num_hog_cols, 31); // The number of channels in HOG is fixed at the moment, as using FHOG
-                pOpen_face_rec->SetObservationVisualization(pVisualizer->GetVisImage());
-                pOpen_face_rec->SetObservationActionUnits(pFace_analyser->GetCurrentAUsReg(), pFace_analyser->GetCurrentAUsClass());
-                pOpen_face_rec->SetObservationLandmarks(vFace_models[model].detected_landmarks, vFace_models[model].GetShape(fx, fy, cx, cy),
-                                                      vFace_models[model].params_global, vFace_models[model].params_local, vFace_models[model].detection_certainty, vFace_models[model].detection_success);
-                pOpen_face_rec->SetObservationPose(pose_estimate);
-                pOpen_face_rec->SetObservationGaze(gaze_direction0, gaze_direction1, gaze_angle, LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy));
-                pOpen_face_rec->SetObservationFaceAlign(sim_warped_img);
-                pOpen_face_rec->SetObservationFaceID(model);
-                pOpen_face_rec->SetObservationTimestamp(30); // bogus value
-                pOpen_face_rec->SetObservationFrameNumber(30); // bogus value
-                pOpen_face_rec->WriteObservation();
-                */
+                //pVisualizer->SetObservationActionUnits(pFace_analyser->GetCurrentAUsReg(), pFace_analyser->GetCurrentAUsClass());
             }
         }
     }
