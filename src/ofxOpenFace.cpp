@@ -224,6 +224,11 @@ void ofxOpenFace::processImageMultipleFaces() {
         }
         
         vData[model].detected = detection_success;
+        vData[model].certainty = vFace_models[model].detection_certainty;
+        vData[model].pose = LandmarkDetector::GetPose(vFace_models[model], fx, fy, cx, cy);
+        vData[model].eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]);
+        vData[model].eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy);
+        vData[model].allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(vFace_models[model]);
     });
     
     // Raise the event for the updated faces
