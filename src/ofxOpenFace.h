@@ -31,7 +31,8 @@
 
 #pragma once
 
-class OpenFaceData {
+// A class for sharing tracking data for a single face
+class OpenFaceDataSingleFace {
     public:
         bool                    detected = false;
         cv::Point3f             gazeLeftEye;
@@ -41,6 +42,12 @@ class OpenFaceData {
         vector<cv::Point2d>     eyeLandmarks2D;
         vector<cv::Point3d>     eyeLandmarks3D;
         double                  certainty = 0.0f;
+};
+
+// A class for sharing tracking data for multiple faces
+class OpenFaceDataMultipleFaces {
+    public:
+        vector<OpenFaceDataSingleFace>  vFaces;
 };
 
 class ofxOpenFace : public ofThread {
@@ -54,7 +61,8 @@ class ofxOpenFace : public ofThread {
         void resetFaceModel();
         int getFPS();
     
-        static ofEvent<OpenFaceData>            eventDataReady;
+        static ofEvent<OpenFaceDataSingleFace>            eventDataReadySingleFace;
+        static ofEvent<OpenFaceDataMultipleFaces>         eventDataReadyMultipleFaces;
     
     private:
         void setupSingleFace();
