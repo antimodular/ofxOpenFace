@@ -79,11 +79,11 @@ class ofxOpenFace : public ofThread {
         int                                             nMaxFaces; // the maximum number of faces
         int                                             nFrameCount; // count the frames being tracked
         vector<LandmarkDetector::CLNF>                  vFace_models;
-        LandmarkDetector::CLNF*                         pFace_model = nullptr;
+        LandmarkDetector::CLNF                          face_model;
         vector<bool>                                    vActiveModels;
-        LandmarkDetector::FaceModelParameters*          pDet_parameters = nullptr;
+        LandmarkDetector::FaceModelParameters           det_parameters;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
-        Utilities::Visualizer*                          pVisualizer = nullptr;
+        Utilities::Visualizer                           visualizer = Utilities::Visualizer(true, false, false, false);
         bool                                            bExit = false; // flag to close the thread
         float                                           fFPS = 0.0f; // thread frame rate
         ofMutex                                         mutexFPS;

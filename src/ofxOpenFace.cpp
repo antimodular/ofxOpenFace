@@ -31,23 +31,19 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight) {
     } else {
         setupSingleFace();
     }
+    bDoVisualizer = false;
 }
 
 void ofxOpenFace::setupSingleFace() {
     // Set up OpenFace
-    pDet_parameters = new LandmarkDetector::FaceModelParameters();
     
     // The modules that are being used for tracking
     string modelLocation = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
-    pFace_model = new LandmarkDetector::CLNF(modelLocation);
+    face_model = LandmarkDetector::CLNF(modelLocation);
     
-    if (!pFace_model->eye_model) {
+    if (!face_model.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
     }
-    
-    // A utility for visualizing the results
-    pVisualizer = new Utilities::Visualizer(true, false, false, false);
-    bDoVisualizer = false;
 }
 
 void ofxOpenFace::setupMultipleFaces() {
@@ -55,35 +51,29 @@ void ofxOpenFace::setupMultipleFaces() {
     string detectorLocation = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
     
     // Set up OpenFace
-    auto det_params = LandmarkDetector::FaceModelParameters();
-    
-    // This is so that the model would not try re-initialising itself
-    det_params.reinit_video_every = -1;
-    det_params.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
-    vDet_parameters.push_back(det_params);
+    auto dp = LandmarkDetector::FaceModelParameters();
+    dp.reinit_video_every = -1; // This is so that the model would not try re-initialising itself
+    dp.curr_face_detector = LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR;
+    vDet_parameters.push_back(dp);
     
     // The modules that are being used for tracking
-    LandmarkDetector::CLNF face_model = LandmarkDetector::CLNF(modelLocation);
-    face_model.face_detector_HAAR.load(detectorLocation);
-    face_model.face_detector_location = detectorLocation;
+    LandmarkDetector::CLNF fm = LandmarkDetector::CLNF(modelLocation);
+    fm.face_detector_HAAR.load(detectorLocation);
+    fm.face_detector_location = detectorLocation;
     
     vFace_models.reserve(nMaxFaces);
-    vFace_models.push_back(face_model);
+    vFace_models.push_back(fm);
     vActiveModels.push_back(false);
     
     for (int i=1; i < nMaxFaces; i++) {
-        vFace_models.push_back(face_model);
+        vFace_models.push_back(fm);
         vActiveModels.push_back(false);
-        vDet_parameters.push_back(det_params);
+        vDet_parameters.push_back(dp);
     }
     
-    if (!face_model.eye_model) {
+    if (!fm.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
     }
-    
-    // A utility for visualizing the results
-    pVisualizer = new Utilities::Visualizer(true, false, false, false);
-    bDoVisualizer = false;
 }
 
 void ofxOpenFace::processImageSingleFace() {
@@ -93,28 +83,28 @@ void ofxOpenFace::processImageSingleFace() {
     
     // The actual facial landmark detection / tracking
     OpenFaceDataSingleFace faceData;
-    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, *pFace_model, *pDet_parameters);
+    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
      
     // If tracking succeeded and we have an eye model, estimate gaze
-    if (faceData.detected && pFace_model->eye_model)
+    if (faceData.detected && face_model.eye_model)
     {
-        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
-        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
+        GazeAnalysis::EstimateGaze(face_model, faceData.gazeLeftEye, fx, fy, cx, cy, true);
+        GazeAnalysis::EstimateGaze(face_model, faceData.gazeRightEye , fx, fy, cx, cy, false);
     }
-    faceData.certainty = pFace_model->detection_certainty;
+    faceData.certainty = face_model.detection_certainty;
 
     // Work out the pose of the head from the tracked model
-    faceData.pose = LandmarkDetector::GetPose(*pFace_model, fx, fy, cx, cy);
-    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
-    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, fx, fy, cx, cy);
-    faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(*pFace_model);
+    faceData.pose = LandmarkDetector::GetPose(face_model, fx, fy, cx, cy);
+    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(face_model);
+    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(face_model, fx, fy, cx, cy);
+    faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(face_model);
 
     if (bDoVisualizer) {
         // Displaying the tracking visualizations
-        pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-        pVisualizer->SetObservationLandmarks(pFace_model->detected_landmarks, faceData.certainty, pFace_model->GetVisibilities());
-        pVisualizer->SetObservationPose(faceData.pose, faceData.certainty);
-        pVisualizer->SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
+        visualizer.SetImage(captured_image, fx, fy, cx, cy);
+        visualizer.SetObservationLandmarks(face_model.detected_landmarks, faceData.certainty, face_model.GetVisibilities());
+        visualizer.SetObservationPose(faceData.pose, faceData.certainty);
+        visualizer.SetObservationGaze(faceData.gazeLeftEye, faceData.gazeRightEye, faceData.eyeLandmarks2D, faceData.eyeLandmarks3D, faceData.certainty);
     }
     ofNotifyEvent(eventDataReadySingleFace, faceData);
 }
@@ -215,8 +205,8 @@ void ofxOpenFace::processImageMultipleFaces() {
     ofNotifyEvent(eventDataReadyMultipleFaces, faceData);
     
     if (bDoVisualizer) {
-        pVisualizer->SetImage(captured_image, fx, fy, cx, cy);
-        auto face_model = vFace_models[0];
+        visualizer.SetImage(captured_image, fx, fy, cx, cy);
+        auto face_model2 = vFace_models[0];
     
         // Go through every model and detect eye gaze, record results and visualise the results
         for(size_t model = 0; model < vFace_models.size(); ++model)
@@ -231,7 +221,7 @@ void ofxOpenFace::processImageMultipleFaces() {
                 cv::Point3f gaze_direction0(0, 0, 0); cv::Point3f gaze_direction1(0, 0, 0); cv::Vec2d gaze_angle(0, 0);
                 
                 // Detect eye gazes
-                if (vFace_models[model].detection_success && face_model.eye_model)
+                if (vFace_models[model].detection_success && face_model2.eye_model)
                 {
                     GazeAnalysis::EstimateGaze(vFace_models[model], gaze_direction0, fx, fy, cx, cy, true);
                     GazeAnalysis::EstimateGaze(vFace_models[model], gaze_direction1, fx, fy, cx, cy, false);
@@ -243,12 +233,11 @@ void ofxOpenFace::processImageMultipleFaces() {
                 cv::Mat_<double> hog_descriptor; int num_hog_rows = 0, num_hog_cols = 0;
                 
                 // Visualize the features
-                pVisualizer->SetObservationFaceAlign(sim_warped_img);
-                pVisualizer->SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
-                pVisualizer->SetObservationLandmarks(vFace_models[model].detected_landmarks, vFace_models[model].detection_certainty);
-                pVisualizer->SetObservationPose(LandmarkDetector::GetPose(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
-                pVisualizer->SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
-                //pVisualizer->SetObservationActionUnits(pFace_analyser->GetCurrentAUsReg(), pFace_analyser->GetCurrentAUsClass());
+                visualizer.SetObservationFaceAlign(sim_warped_img);
+                visualizer.SetObservationHOG(hog_descriptor, num_hog_rows, num_hog_cols);
+                visualizer.SetObservationLandmarks(vFace_models[model].detected_landmarks, vFace_models[model].detection_certainty);
+                visualizer.SetObservationPose(LandmarkDetector::GetPose(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
+                visualizer.SetObservationGaze(gaze_direction0, gaze_direction1, LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]), LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy), vFace_models[model].detection_certainty);
             }
         }
     }
@@ -276,14 +265,17 @@ void ofxOpenFace::exit() {
     // Clear memory
     stop();
     waitForThread(true);
-    delete pVisualizer;
 }
 
 void ofxOpenFace::resetFaceModel() {
-    for(size_t i=0; i < vFace_models.size(); ++i)
-    {
-        vFace_models[i].Reset();
-        vActiveModels[i] = false;
+    if (bMultipleFaces) {
+        for(size_t i=0; i < vFace_models.size(); ++i)
+        {
+            vFace_models[i].Reset();
+            vActiveModels[i] = false;
+        }
+    } else {
+        face_model.Reset();
     }
 }
 
