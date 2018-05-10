@@ -309,6 +309,7 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
         return;
     }
     
+    // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
     ofNoFill();
     
     // Draw the pose
