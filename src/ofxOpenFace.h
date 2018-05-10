@@ -56,6 +56,7 @@ class ofxOpenFace : public ofThread {
         ~ofxOpenFace();
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM);
         void setImage(ofImage img);
+        void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data);
         void exit();
         void stop();
         void resetFaceModel();
@@ -71,6 +72,8 @@ class ofxOpenFace : public ofThread {
         void processImageMultipleFaces();
         virtual void threadedFunction();
         void setFPS(float value);
+        void drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data);
+    
         static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double>>& face_detections);
     
         int                                             fx, fy, cx, cy;
@@ -83,7 +86,6 @@ class ofxOpenFace : public ofThread {
         vector<bool>                                    vActiveModels;
         LandmarkDetector::FaceModelParameters           det_parameters;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
-        Utilities::Visualizer                           visualizer = Utilities::Visualizer(true, false, false, false);
         bool                                            bExit = false; // flag to close the thread
         float                                           fFPS = 0.0f; // thread frame rate
         ofMutex                                         mutexFPS;
@@ -93,5 +95,8 @@ class ofxOpenFace : public ofThread {
         bool                                            bHaveNewImage = false; // there is a new image available
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
-        bool                                            bDoVisualizer; // set to true to generate the visualizer image
+    
+    
+        const int                                       draw_shiftbits = 4;
+        const int                                       draw_multiplier = 1 << 4;
 };
