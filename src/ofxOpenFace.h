@@ -44,21 +44,17 @@ class OpenFaceDataSingleFace : public ofxCv::Follower<OpenFaceDataSingleFace> {
         double                  certainty = 0.0f;
         cv::Rect                rBoundingBox;
         string                  sFaceID = "";
+        int                     nTimeAppearedMs = 0; // to keep track of the age
     
-        void setup(const OpenFaceDataSingleFace& track);
-        void update(const OpenFaceDataSingleFace& track);
-        void kill();
+        void setup(const OpenFaceDataSingleFace& track); // called by the tracker when a new face is detected
+        void update(const OpenFaceDataSingleFace& track); // called by the tracker when an existing face is updated
+        void kill(); // called by the tracker when an existing face is lost
+        int getAgeSeconds() const;
 };
 
 namespace ofxCv {
     float trackingDistance(const OpenFaceDataSingleFace& a, const OpenFaceDataSingleFace& b);
 }
-
-// A class for sharing tracking data for multiple faces
-class OpenFaceDataMultipleFaces {
-    public:
-        vector<OpenFaceDataSingleFace>  vFaces;
-};
 
 class ofxOpenFace : public ofThread {
     public:
@@ -73,14 +69,14 @@ class ofxOpenFace : public ofThread {
         void resetFaceModel();
         int getFPS();
     
-        static ofEvent<OpenFaceDataSingleFace>            eventDataReadySingleFace;
-        static ofEvent<OpenFaceDataMultipleFaces>         eventDataReadyMultipleFaces;
+        static ofEvent<OpenFaceDataSingleFace>              eventDataReadySingleFace;
+        static ofEvent<vector<OpenFaceDataSingleFace>>      eventDataReadyMultipleFaces;
     
     private:
         void setupSingleFace();
         void setupMultipleFaces(bool bUseHOGSVM);
-        void processImageSingleFace();
-        void processImageMultipleFaces();
+        OpenFaceDataSingleFace processImageSingleFace();
+        vector<OpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();
         void setFPS(float value);
         void drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data);
@@ -107,7 +103,6 @@ class ofxOpenFace : public ofThread {
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
         ofxCv::TrackerFollower<OpenFaceDataSingleFace, OpenFaceDataSingleFace>  tracker;
-    
     
         const int                                       draw_shiftbits = 4;
         const int                                       draw_multiplier = 1 << 4;

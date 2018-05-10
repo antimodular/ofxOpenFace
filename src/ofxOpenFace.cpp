@@ -3,7 +3,7 @@
 
 ofEvent<OpenFaceDataSingleFace> ofxOpenFace::eventDataReadySingleFace = ofEvent<OpenFaceDataSingleFace>();
 
-ofEvent<OpenFaceDataMultipleFaces> ofxOpenFace::eventDataReadyMultipleFaces = ofEvent<OpenFaceDataMultipleFaces>();
+ofEvent<vector<OpenFaceDataSingleFace>> ofxOpenFace::eventDataReadyMultipleFaces = ofEvent<vector<OpenFaceDataSingleFace>>();
 
 // Constructor
 ofxOpenFace::ofxOpenFace(){
@@ -83,7 +83,7 @@ void ofxOpenFace::setupMultipleFaces(bool bUseHOGSVM) {
     }
 }
 
-void ofxOpenFace::processImageSingleFace() {
+OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     // Reading the images
     cv::Mat captured_image = matToProcessColor;
     cv::Mat grayscale_image = matToProcessGrayScale;
@@ -117,15 +117,10 @@ void ofxOpenFace::processImageSingleFace() {
     pl.close();
     faceData.rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
     
-    // Update the tracker
-    std::vector<OpenFaceDataSingleFace> v;
-    v.push_back(faceData);
-    tracker.track(v);
-
-    ofNotifyEvent(eventDataReadySingleFace, faceData);
+    return faceData;
 }
 
-void ofxOpenFace::processImageMultipleFaces() {
+vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
     cv::Mat captured_image = matToProcessColor;
     cv::Mat grayscale_image = matToProcessGrayScale;
@@ -227,16 +222,10 @@ void ofxOpenFace::processImageMultipleFaces() {
         vData[model].rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
     });
     
-    // Raise the event for the updated faces
-    OpenFaceDataMultipleFaces faceData;
-    faceData.vFaces = vData;
-    ofNotifyEvent(eventDataReadyMultipleFaces, faceData);
-    
-    // Update the tracker
-    tracker.track(vData);
-    
     // Update the frame count
     nFrameCount++;
+    
+    return vData;
 }
 
 void ofxOpenFace::setImage(ofImage img) {
@@ -288,9 +277,19 @@ void ofxOpenFace::threadedFunction() {
             mutexImage.lock();
             nFrameCount = 0;
             if (bMultipleFaces) {
-                processImageMultipleFaces();
+                auto v = processImageMultipleFaces();
+                // Raise the event for the updated faces
+                ofNotifyEvent(eventDataReadyMultipleFaces, v);
+                // Update the tracker
+                tracker.track(v);
             } else {
-                processImageSingleFace();
+                auto d = processImageSingleFace();
+                // Update the tracker
+                std::vector<OpenFaceDataSingleFace> v;
+                v.push_back(d);
+                tracker.track(v);
+                // Raise the event for the updated faces
+                ofNotifyEvent(eventDataReadySingleFace, d);
             }
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
@@ -373,8 +372,8 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
                   cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
     
-    // Draw the ID and certainty
-    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
+    // Draw extra information: ID, certainty, age
+    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "% / Age: " + ofToString(data.getAgeSeconds() + "s"); 
     cv::Point ptNoseTip = data.allLandmarks2D.at(33);
     cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen));
 }
@@ -463,6 +462,7 @@ void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
 // Tracker classes
 void OpenFaceDataSingleFace::setup(const OpenFaceDataSingleFace& track) {
     *this = track;
+    nTimeAppearedMs = ofGetElapsedTimeMillis();
 }
 
 void OpenFaceDataSingleFace::update(const OpenFaceDataSingleFace& track) {
@@ -471,6 +471,10 @@ void OpenFaceDataSingleFace::update(const OpenFaceDataSingleFace& track) {
 
 void OpenFaceDataSingleFace::kill() {
     dead = true;
+}
+
+int OpenFaceDataSingleFace::getAgeSeconds() const {
+    return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000;
 }
 
 // Return the tracking distance between two tracked objects
