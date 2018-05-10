@@ -101,6 +101,7 @@ void ofxOpenFace::processImageSingleFace() {
     faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(face_model);
     faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(face_model, fx, fy, cx, cy);
     faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(face_model);
+    faceData.sFaceID = ofToString(1);
     
     // Figure out the bounding box of all landmarks
     vector<ofPoint> vLandmarks2D;
@@ -202,6 +203,7 @@ void ofxOpenFace::processImageMultipleFaces() {
         vData[model].eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(vFace_models[model]);
         vData[model].eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(vFace_models[model], fx, fy, cx, cy);
         vData[model].allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(vFace_models[model]);
+        vData[model].sFaceID = ofToString(model + 1);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeLeftEye, fx, fy, cx, cy, true);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeRightEye, fx, fy, cx, cy, false);
         
@@ -358,8 +360,8 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     cv::rectangle(mat, cv::Point(data.rBoundingBox.getTopLeft().x, data.rBoundingBox.getTopLeft().y),
                   cv::Point(data.rBoundingBox.getBottomRight().x, data.rBoundingBox.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
     
-    // Draw the certainty
-    string s = ofToString(100.0f * data.certainty, 2) + "%";
+    // Draw the ID and certainty
+    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
     cv::Point ptNoseTip = data.allLandmarks2D.at(33);
     cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen));
 }
