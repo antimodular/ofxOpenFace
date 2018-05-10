@@ -15,7 +15,7 @@ ofxOpenFace::~ofxOpenFace(){
     waitForThread(true);
 }
 
-void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM) {
+void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx) {
     nImgWidth = nWidth;
     nImgHeight = nHeight;
     
@@ -34,8 +34,8 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool 
     }
     
     // Setup the tracker
-    tracker.setPersistence(15); // ms before forgetting an object
-    tracker.setMaximumDistance(32); // max pixels allowed to move between frames
+    tracker.setPersistence(persistenceMs); // ms before forgetting an object
+    tracker.setMaximumDistance(maxDistancePx); // max pixels allowed to move between frames
 }
 
 void ofxOpenFace::setupSingleFace() {

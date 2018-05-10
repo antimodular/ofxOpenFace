@@ -64,7 +64,7 @@ class ofxOpenFace : public ofThread {
     public:
         ofxOpenFace();
         ~ofxOpenFace();
-        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM);
+        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx);
         void setImage(ofImage img);
         void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data);
         void drawTrackedIntoMaterial(cv::Mat& mat);
