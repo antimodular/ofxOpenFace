@@ -332,6 +332,11 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     
     // Draw the gazes
     drawGazes(mat, data);
+    
+    // Draw the certainty
+    string s = ofToString(100.0f * data.certainty, 2) + "%";
+    cv::Point ptNoseTip = data.allLandmarks2D.at(33);
+    cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen));
 }
 
 void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
@@ -392,15 +397,16 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
     points_right.push_back(cv::Point3d(pupil_right));
     points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(data.gazeRightEye)*50.0));
     
+    // TODO: figure out why 3D gaze is not drawn
     cv::Mat_<float> proj_points;
     cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
     FaceAnalysis::Project(proj_points, mesh_0, fx, fy, cx, cy);
     cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), ofxCv::toCv(ofColor::aquamarine), 2, CV_AA, draw_shiftbits);
+             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
     
-    cv::Mat_<double> mesh_1 = (cv::Mat_<double>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
+    cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
     FaceAnalysis::Project(proj_points, mesh_1, fx, fy, cx, cy);
     cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), ofxCv::toCv(ofColor::aquamarine), 2, CV_AA, draw_shiftbits);
+             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
 }
