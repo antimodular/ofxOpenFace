@@ -101,6 +101,16 @@ void ofxOpenFace::processImageSingleFace() {
     faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(face_model);
     faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(face_model, fx, fy, cx, cy);
     faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(face_model);
+    
+    // Figure out the bounding box of all landmarks
+    vector<ofPoint> vLandmarks2D;
+    for (auto& l : faceData.allLandmarks2D) {
+        vLandmarks2D.push_back(ofPoint(l.x, l.y));
+    }
+    ofPolyline pl;
+    pl.addVertices(vLandmarks2D);
+    pl.close();
+    faceData.rBoundingBox = pl.getBoundingBox();
 
     ofNotifyEvent(eventDataReadySingleFace, faceData);
 }
@@ -194,6 +204,16 @@ void ofxOpenFace::processImageMultipleFaces() {
         vData[model].allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(vFace_models[model]);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeLeftEye, fx, fy, cx, cy, true);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeRightEye, fx, fy, cx, cy, false);
+        
+        // Figure out the bounding box of all landmarks
+        vector<ofPoint> vLandmarks2D;
+        for (auto& l : vData[model].allLandmarks2D) {
+            vLandmarks2D.push_back(ofPoint(l.x, l.y));
+        }
+        ofPolyline pl;
+        pl.addVertices(vLandmarks2D);
+        pl.close();
+        vData[model].rBoundingBox = pl.getBoundingBox();
     });
     
     // Raise the event for the updated faces
@@ -333,6 +353,10 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     
     // Draw the gazes
     drawGazes(mat, data);
+    
+    // Draw the bounding box
+    cv::rectangle(mat, cv::Point(data.rBoundingBox.getTopLeft().x, data.rBoundingBox.getTopLeft().y),
+                  cv::Point(data.rBoundingBox.getBottomRight().x, data.rBoundingBox.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
     
     // Draw the certainty
     string s = ofToString(100.0f * data.certainty, 2) + "%";

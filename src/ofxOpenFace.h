@@ -42,6 +42,7 @@ class OpenFaceDataSingleFace {
         vector<cv::Point2d>     eyeLandmarks2D;
         vector<cv::Point3d>     eyeLandmarks3D;
         double                  certainty = 0.0f;
+        ofRectangle             rBoundingBox;
 };
 
 // A class for sharing tracking data for multiple faces
