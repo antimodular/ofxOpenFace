@@ -373,7 +373,8 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
                   cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
     
     // Draw extra information: ID, certainty, age
-    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "% / Age: " + ofToString(data.getAgeSeconds() + "s"); 
+    //string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "% / Age: " + ofToString(data.getAgeSeconds() + "s");
+    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
     cv::Point ptNoseTip = data.allLandmarks2D.at(33);
     cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen));
 }
@@ -451,7 +452,7 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
 }
 
 void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
-    vector<OpenFaceDataSingleFace> followed = tracker.getFollowers();
+    vector<OpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
     for (auto &f : followed) {
         ofRectangle r = ofxCv::toOf(f.rBoundingBox);
         cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
@@ -459,27 +460,40 @@ void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
     }
 }
 
+// Copy all data from the child class.
+OpenFaceDataSingleFaceTracked::OpenFaceDataSingleFaceTracked(const OpenFaceDataSingleFace& d) {
+    this->detected = d.detected;
+    this->gazeLeftEye = d.gazeLeftEye;
+    this->gazeRightEye = d.gazeRightEye;
+    this->pose = d.pose;
+    this->allLandmarks2D = d.allLandmarks2D;
+    this->eyeLandmarks2D = d.eyeLandmarks2D;
+    this->eyeLandmarks3D = d.eyeLandmarks3D;
+    this->certainty = d.certainty;
+    this->rBoundingBox = d.rBoundingBox;
+    this->sFaceID = d.sFaceID;
+}
+
 // Tracker classes
-void OpenFaceDataSingleFace::setup(const OpenFaceDataSingleFace& track) {
-    *this = track;
+void OpenFaceDataSingleFaceTracked::setup(const OpenFaceDataSingleFace& track) {
+    *this = OpenFaceDataSingleFaceTracked(track);
     nTimeAppearedMs = ofGetElapsedTimeMillis();
 }
 
-void OpenFaceDataSingleFace::update(const OpenFaceDataSingleFace& track) {
-    *this = track;
+void OpenFaceDataSingleFaceTracked::update(const OpenFaceDataSingleFace& track) {
+    *this = OpenFaceDataSingleFaceTracked(track);
 }
 
-void OpenFaceDataSingleFace::kill() {
+void OpenFaceDataSingleFaceTracked::kill() {
     dead = true;
 }
 
-int OpenFaceDataSingleFace::getAgeSeconds() const {
+int OpenFaceDataSingleFaceTracked::getAgeSeconds() const {
     return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000;
 }
 
-// Return the tracking distance between two tracked objects
-float ofxCv::trackingDistance(const OpenFaceDataSingleFace& a, const OpenFaceDataSingleFace& b) {
+// Return the tracking distance between two objects
+float ofxCv::trackingDistance(const OpenFaceDataSingleFaceTracked& a, const OpenFaceDataSingleFaceTracked& b) {
     // For now, use the tracking distance of the bounding boxes
     return ofxCv::trackingDistance(a.rBoundingBox, b.rBoundingBox);
 }
-
