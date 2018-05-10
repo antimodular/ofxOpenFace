@@ -118,9 +118,9 @@ void ofxOpenFace::processImageSingleFace() {
     faceData.rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
     
     // Update the tracker
-    vector<cv::Rect> vRect;
-    vRect.push_back(faceData.rBoundingBox);
-    tracker.track(vRect);
+    std::vector<OpenFaceDataSingleFace> v;
+    v.push_back(faceData);
+    tracker.track(v);
 
     ofNotifyEvent(eventDataReadySingleFace, faceData);
 }
@@ -233,11 +233,7 @@ void ofxOpenFace::processImageMultipleFaces() {
     ofNotifyEvent(eventDataReadyMultipleFaces, faceData);
     
     // Update the tracker
-    vector<cv::Rect> vRect;
-    for (auto& d : vData) {
-        vRect.push_back(d.rBoundingBox);
-    }
-    tracker.track(vRect);
+    tracker.track(vData);
     
     // Update the frame count
     nFrameCount++;
@@ -465,15 +461,21 @@ void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
 }
 
 // Tracker classes
-void OpenFaceDataSingleFace::setup(const cv::Rect& track) {
-    rBoundingBox = track;
+void OpenFaceDataSingleFace::setup(const OpenFaceDataSingleFace& track) {
+    *this = track;
 }
 
-void OpenFaceDataSingleFace::update(const cv::Rect& track) {
-    rBoundingBox = track;
+void OpenFaceDataSingleFace::update(const OpenFaceDataSingleFace& track) {
+    *this = track;
 }
 
 void OpenFaceDataSingleFace::kill() {
     dead = true;
+}
+
+// Return the tracking distance between two tracked objects
+float ofxCv::trackingDistance(const OpenFaceDataSingleFace& a, const OpenFaceDataSingleFace& b) {
+    // For now, use the tracking distance of the bounding boxes
+    return ofxCv::trackingDistance(a.rBoundingBox, b.rBoundingBox);
 }
 
