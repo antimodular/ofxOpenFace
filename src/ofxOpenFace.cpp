@@ -1,13 +1,14 @@
 #include "ofxOpenFace.h"
 #include <Face_utils.h>
 
-ofEvent<OpenFaceDataSingleFace> ofxOpenFace::eventDataReadySingleFace = ofEvent<OpenFaceDataSingleFace>();
-
-ofEvent<vector<OpenFaceDataSingleFace>> ofxOpenFace::eventDataReadyMultipleFaces = ofEvent<vector<OpenFaceDataSingleFace>>();
+ofEvent<OpenFaceDataSingleFace> ofxOpenFace::eventOpenFaceDataSingleRaw = ofEvent<OpenFaceDataSingleFace>();
+ofEvent<vector<OpenFaceDataSingleFace>> ofxOpenFace::eventOpenFaceDataMultipleRaw = ofEvent<vector<OpenFaceDataSingleFace>>();
+ofEvent<OpenFaceDataSingleFaceTracked> ofxOpenFace::eventOpenFaceDataSingleTracked = ofEvent<OpenFaceDataSingleFaceTracked>();
+ofEvent<vector<OpenFaceDataSingleFaceTracked>> ofxOpenFace::eventOpenFaceDataMultipleTracked = ofEvent<vector<OpenFaceDataSingleFaceTracked>>();
 
 // Constructor
 ofxOpenFace::ofxOpenFace(){
-    nMaxFaces = 4;
+    nMaxFaces = 4; // default value
 }
 
 // Destructor
@@ -15,11 +16,11 @@ ofxOpenFace::~ofxOpenFace(){
     waitForThread(true);
 }
 
-void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx) {
+void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx, int nMaxFacesTracked) {
     nImgWidth = nWidth;
     nImgHeight = nHeight;
-    
     bMultipleFaces = bTrackMultipleFaces;
+    nMaxFaces = nMaxFacesTracked;
     
     // Initialize some parameters. See https://github.com/TadasBaltrusaitis/OpenFace/wiki/API-calls
     fx = 500.0f;
@@ -279,7 +280,7 @@ void ofxOpenFace::threadedFunction() {
             if (bMultipleFaces) {
                 auto v = processImageMultipleFaces();
                 // Raise the event for the updated faces
-                ofNotifyEvent(eventDataReadyMultipleFaces, v);
+                ofNotifyEvent(eventOpenFaceDataMultipleRaw, v);
                 // Update the tracker
                 tracker.track(v);
             } else {
@@ -289,7 +290,7 @@ void ofxOpenFace::threadedFunction() {
                 v.push_back(d);
                 tracker.track(v);
                 // Raise the event for the updated faces
-                ofNotifyEvent(eventDataReadySingleFace, d);
+                ofNotifyEvent(eventOpenFaceDataSingleRaw, d);
             }
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
