@@ -32,7 +32,7 @@
 #pragma once
 
 // A class for sharing tracking data for a single face
-class OpenFaceDataSingleFace {
+class OpenFaceDataSingleFace : public ofxCv::RectFollower {
     public:
         bool                    detected = false;
         cv::Point3f             gazeLeftEye;
@@ -42,8 +42,12 @@ class OpenFaceDataSingleFace {
         vector<cv::Point2d>     eyeLandmarks2D;
         vector<cv::Point3d>     eyeLandmarks3D;
         double                  certainty = 0.0f;
-        ofRectangle             rBoundingBox;
+        cv::Rect                rBoundingBox;
         string                  sFaceID = "";
+    
+        void setup(const cv::Rect& track);
+        void update(const cv::Rect& track);
+        void kill();
 };
 
 // A class for sharing tracking data for multiple faces
@@ -59,6 +63,7 @@ class ofxOpenFace : public ofThread {
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM);
         void setImage(ofImage img);
         void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data);
+        void drawTrackedIntoMaterial(cv::Mat& mat);
         void exit();
         void stop();
         void resetFaceModel();
@@ -97,6 +102,7 @@ class ofxOpenFace : public ofThread {
         bool                                            bHaveNewImage = false; // there is a new image available
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
+        ofxCv::RectTrackerFollower<OpenFaceDataSingleFace>  tracker;
     
     
         const int                                       draw_shiftbits = 4;

@@ -32,6 +32,10 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool 
     } else {
         setupSingleFace();
     }
+    
+    // Setup the tracker
+    tracker.setPersistence(15); // ms before forgetting an object
+    tracker.setMaximumDistance(32); // max pixels allowed to move between frames
 }
 
 void ofxOpenFace::setupSingleFace() {
@@ -111,7 +115,12 @@ void ofxOpenFace::processImageSingleFace() {
     ofPolyline pl;
     pl.addVertices(vLandmarks2D);
     pl.close();
-    faceData.rBoundingBox = pl.getBoundingBox();
+    faceData.rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
+    
+    // Update the tracker
+    vector<cv::Rect> vRect;
+    vRect.push_back(faceData.rBoundingBox);
+    tracker.track(vRect);
 
     ofNotifyEvent(eventDataReadySingleFace, faceData);
 }
@@ -215,13 +224,20 @@ void ofxOpenFace::processImageMultipleFaces() {
         ofPolyline pl;
         pl.addVertices(vLandmarks2D);
         pl.close();
-        vData[model].rBoundingBox = pl.getBoundingBox();
+        vData[model].rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
     });
     
     // Raise the event for the updated faces
     OpenFaceDataMultipleFaces faceData;
     faceData.vFaces = vData;
     ofNotifyEvent(eventDataReadyMultipleFaces, faceData);
+    
+    // Update the tracker
+    vector<cv::Rect> vRect;
+    for (auto& d : vData) {
+        vRect.push_back(d.rBoundingBox);
+    }
+    tracker.track(vRect);
     
     // Update the frame count
     nFrameCount++;
@@ -357,8 +373,9 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     drawGazes(mat, data);
     
     // Draw the bounding box
-    cv::rectangle(mat, cv::Point(data.rBoundingBox.getTopLeft().x, data.rBoundingBox.getTopLeft().y),
-                  cv::Point(data.rBoundingBox.getBottomRight().x, data.rBoundingBox.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
+    ofRectangle r = ofxCv::toOf(data.rBoundingBox);
+    cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
+                  cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
     
     // Draw the ID and certainty
     string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
@@ -437,3 +454,26 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
              cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
 }
+
+void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
+    vector<OpenFaceDataSingleFace> followed = tracker.getFollowers();
+    for (auto &f : followed) {
+        ofRectangle r = ofxCv::toOf(f.rBoundingBox);
+        cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
+                      cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::white));
+    }
+}
+
+// Tracker classes
+void OpenFaceDataSingleFace::setup(const cv::Rect& track) {
+    rBoundingBox = track;
+}
+
+void OpenFaceDataSingleFace::update(const cv::Rect& track) {
+    rBoundingBox = track;
+}
+
+void OpenFaceDataSingleFace::kill() {
+    dead = true;
+}
+
