@@ -88,8 +88,10 @@ void ofxOpenFace::setupMultipleFaces(bool bUseHOGSVM) {
 
 OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     // Reading the images
+    mutexImage.lock();
     cv::Mat captured_image = matToProcessColor;
     cv::Mat grayscale_image = matToProcessGrayScale;
+    mutexImage.unlock();
     
     // The actual facial landmark detection / tracking
     OpenFaceDataSingleFace faceData;
@@ -125,8 +127,10 @@ OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
 
 vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
+    mutexImage.lock();
     cv::Mat captured_image = matToProcessColor;
     cv::Mat grayscale_image = matToProcessGrayScale;
+    mutexImage.unlock();
     
     vector<cv::Rect_<double> > face_detections;
     
@@ -276,8 +280,6 @@ void ofxOpenFace::threadedFunction() {
         if (!bHaveNewImage) {
             ofSleepMillis(20);
         } else {
-            //ofLogNotice("ofxOpenFace", "New image to process.");
-            mutexImage.lock();
             nFrameCount = 0;
             if (bMultipleFaces) {
                 auto v = processImageMultipleFaces();
@@ -300,7 +302,6 @@ void ofxOpenFace::threadedFunction() {
                     ofNotifyEvent(eventOpenFaceDataSingleTracked, tracker.getFollowers().front());
                 }
             }
-            mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
         }
         fps_tracker.AddFrame();
