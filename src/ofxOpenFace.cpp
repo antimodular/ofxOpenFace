@@ -382,9 +382,9 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
 
 // Draw the face data in the referenced material
 void ofxOpenFace::drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data) {
-    drawFaceIntoMaterial(mat, (const OpenFaceDataSingleFace&)data);
+    drawFaceIntoMaterial(mat, (const OpenFaceDataSingleFace&)data, true);
     
-    if (data.detected && data.allLandmarks2D.size() > 0) {
+    if (data.allLandmarks2D.size() > 0) {
         // Draw label and age
         string s = "Label: " + ofToString(data.getLabel()) + " / Age: " + ofToString(data.getAgeSeconds()) + "s";
         // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
