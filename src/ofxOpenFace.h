@@ -109,12 +109,11 @@ class ofxOpenFace : public ofThread {
         LandmarkDetector::FaceModelParameters           det_parameters;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
         bool                                            bExit = false; // flag to close the thread
-        float                                           fFPS = 0.0f; // thread frame rate
-        ofMutex                                         mutexFPS;
         ofMutex                                         mutexImage;
         float                                           fTimePerRunMs = 0.0f;
         bool                                            bMultipleFaces;
         bool                                            bHaveNewImage = false; // there is a new image available
+        Utilities::FpsTracker                           fps_tracker;
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
         ofxCv::TrackerFollower<OpenFaceDataSingleFace, OpenFaceDataSingleFaceTracked>  tracker;

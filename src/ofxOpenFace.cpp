@@ -34,6 +34,8 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool 
         setupSingleFace();
     }
     
+    fps_tracker.AddFrame();
+    
     // Setup the tracker
     tracker.setPersistence(persistenceMs); // ms before forgetting an object
     tracker.setMaximumDistance(maxDistancePx); // max pixels allowed to move between frames
@@ -301,25 +303,14 @@ void ofxOpenFace::threadedFunction() {
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
         }
-        
-        int timeThisRunMs = ofGetElapsedTimeMillis() - timeBeforeMs;
-        fTimePerRunMs = (fTimePerRunMs * fSmoothing) + (timeThisRunMs * (1.0f - fSmoothing)); // time in ms
-        setFPS(1000.0f / fTimePerRunMs);
+        fps_tracker.AddFrame();
     }
     bHaveNewImage = false;
 }
 
 int ofxOpenFace::getFPS() {
-    mutexFPS.lock();
-    int nToReturn = (int)fFPS;
-    mutexFPS.unlock();
+    int nToReturn = (int)fps_tracker.GetFPS();
     return nToReturn;
-}
-
-void ofxOpenFace::setFPS(float value) {
-    mutexFPS.lock();
-    fFPS = value;
-    mutexFPS.unlock();
 }
 
 void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double> >& face_detections) {
