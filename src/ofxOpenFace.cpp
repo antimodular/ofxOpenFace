@@ -279,10 +279,12 @@ void ofxOpenFace::threadedFunction() {
             nFrameCount = 0;
             if (bMultipleFaces) {
                 auto v = processImageMultipleFaces();
-                // Raise the event for the updated faces
-                ofNotifyEvent(eventOpenFaceDataMultipleRaw, v);
                 // Update the tracker
                 tracker.track(v);
+                // Raise the event for the updated faces
+                ofNotifyEvent(eventOpenFaceDataMultipleRaw, v);
+                // Raise the event for the tracked faces
+                ofNotifyEvent(eventOpenFaceDataMultipleTracked, tracker.getFollowers());
             } else {
                 auto d = processImageSingleFace();
                 // Update the tracker
@@ -291,6 +293,10 @@ void ofxOpenFace::threadedFunction() {
                 tracker.track(v);
                 // Raise the event for the updated faces
                 ofNotifyEvent(eventOpenFaceDataSingleRaw, d);
+                // Raise the event for the tracked faces
+                if (tracker.getFollowers().size() > 0) {
+                    ofNotifyEvent(eventOpenFaceDataSingleTracked, tracker.getFollowers().front());
+                }
             }
             mutexImage.unlock();
             bHaveNewImage = false; // ready for a new image
@@ -338,12 +344,12 @@ void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& 
 }
 
 // Draw the face data in the referenced material
-void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
-    if (!data.detected) {
+void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw) {
+    if (!data.detected && !bForceDraw) {
+        // Do not draw if no face is detected and draw is not forced
         return;
     }
     
-    // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
     ofNoFill();
     
     // Draw the pose
@@ -368,16 +374,31 @@ void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFac
     // Draw the gazes
     drawGazes(mat, data);
     
-    // Draw the bounding box
-    ofRectangle r = ofxCv::toOf(data.rBoundingBox);
-    cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
-                  cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
+    if (data.allLandmarks2D.size() > 0) {
+        // Draw the bounding box
+        ofRectangle r = ofxCv::toOf(data.rBoundingBox);
+        cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
+                      cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
+        
+        // Draw extra information: ID, certainty
+        string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
+        // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
+        cv::Point ptNoseTip = data.allLandmarks2D.at(33);
+        cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen), 3);
+    }
+}
+
+// Draw the face data in the referenced material
+void ofxOpenFace::drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data) {
+    drawFaceIntoMaterial(mat, (const OpenFaceDataSingleFace&)data);
     
-    // Draw extra information: ID, certainty, age
-    //string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "% / Age: " + ofToString(data.getAgeSeconds() + "s");
-    string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
-    cv::Point ptNoseTip = data.allLandmarks2D.at(33);
-    cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen));
+    if (data.detected && data.allLandmarks2D.size() > 0) {
+        // Draw label and age
+        string s = "Label: " + ofToString(data.getLabel()) + " / Age: " + ofToString(data.getAgeSeconds()) + "s";
+        // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
+        cv::Point ptChin = data.allLandmarks2D.at(8);
+        cv::putText(mat, s, ptChin, 0, 1.0, ofxCv::toCv(ofColor::darkGreen), 3);
+    }
 }
 
 void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
@@ -452,12 +473,12 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
 
 }
 
+// Draw all tracked faces in one function
 void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
     vector<OpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
     for (auto &f : followed) {
-        ofRectangle r = ofxCv::toOf(f.rBoundingBox);
-        cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
-                      cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::white));
+        // Draw the face
+        drawTrackedFaceIntoMaterial(mat, f);
     }
 }
 

@@ -71,7 +71,8 @@ class ofxOpenFace : public ofThread {
         ~ofxOpenFace();
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
-        void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data);
+        void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw = false);
+        void drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data);
         void drawTrackedIntoMaterial(cv::Mat& mat);
         void exit();
         void stop();
@@ -85,6 +86,7 @@ class ofxOpenFace : public ofThread {
         // Events for the tracked OpenFace data
         static ofEvent<OpenFaceDataSingleFaceTracked>              eventOpenFaceDataSingleTracked;
         static ofEvent<vector<OpenFaceDataSingleFaceTracked>>      eventOpenFaceDataMultipleTracked;
+    
     private:
         void setupSingleFace();
         void setupMultipleFaces(bool bUseHOGSVM);
