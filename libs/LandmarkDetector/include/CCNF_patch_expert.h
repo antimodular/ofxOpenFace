@@ -51,7 +51,7 @@ class CCNF_neuron{
 
 public:
 
-	// Type of patch (0=raw,1=grad other types besides raw are not actually used now)
+	// Type of patch (0=raw,1=grad,3=depth, other types besides raw are not actually used now)
 	int     neuron_type; 
 
 	// scaling of weights (needed as the energy of neuron might not be 1) 
@@ -78,7 +78,7 @@ public:
 
 	void Read(std::ifstream &stream);
 	// The im_dft, integral_img, and integral_img_sq are precomputed images for convolution speedups (they get set if passed in empty values)
-	void Response(cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp);
+	void Response(const cv::Mat_<float> &im, cv::Mat_<double> &im_dft, cv::Mat &integral_img, cv::Mat &integral_img_sq, cv::Mat_<float> &resp);
 
 };
 
@@ -101,6 +101,9 @@ public:
 	std::vector<cv::Mat_<float> >	Sigmas;
 	std::vector<double>				betas;
 
+	// Combined weight matrix from each neuron
+	cv::Mat_<float> weight_matrix;
+
 	// How confident we are in the patch
 	double   patch_confidence;
 
@@ -112,8 +115,10 @@ public:
 
 	void Read(std::ifstream &stream, std::vector<int> window_sizes, std::vector<std::vector<cv::Mat_<float> > > sigma_components);
 
-	// actual work (can pass in an image)
-	void Response(cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+	// actual work (can pass in an image and a potential depth image, if the CCNF is trained with depth)
+	void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+
+	void ResponseOpenBlas(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float> &im2col_prealloc);
 
 	// Helper function to compute relevant sigmas
 	void ComputeSigmas(std::vector<cv::Mat_<float> > sigma_components, int window_size);

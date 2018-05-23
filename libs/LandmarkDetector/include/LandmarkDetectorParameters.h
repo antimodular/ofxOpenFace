@@ -56,7 +56,7 @@ struct FaceModelParameters
 	bool validate_detections;
 
 	// Landmark detection validator boundary for correct detection, the regressor output 1 (perfect alignment) 0 (bad alignment), 
-	double validation_boundary;
+	float validation_boundary;
 
 	// Used when tracking is going well
 	vector<int> window_sizes_small;
@@ -68,29 +68,35 @@ struct FaceModelParameters
 	vector<int> window_sizes_current;
 	
 	// How big is the tracking template that helps with large motions
-	double face_template_scale;	
+	float face_template_scale;	
 	bool use_face_template;
 
 	// Where to load the model from
 	string model_location;
 	
 	// this is used for the smooting of response maps (KDE sigma)
-	double sigma;
+	float sigma;
 
-	double reg_factor;	// weight put to regularisation
-	double weight_factor; // factor for weighted least squares
+	float reg_factor;	// weight put to regularisation
+	float weight_factor; // factor for weighted least squares
 
 	// should multiple views be considered during reinit
 	bool multi_view;
 	
+	// Based on model location, this affects the parameter settings
+	enum LandmarkDetector { CLM_DETECTOR, CLNF_DETECTOR, CECLM_DETECTOR };
+	LandmarkDetector curr_landmark_detector;
+
 	// How often should face detection be used to attempt reinitialisation, every n frames (set to negative not to reinit)
 	int reinit_video_every;
 
 	// Determining which face detector to use for (re)initialisation, HAAR is quicker but provides more false positives and is not goot for in-the-wild conditions
 	// Also HAAR detector can detect smaller faces while HOG SVM is only capable of detecting faces at least 70px across
-	enum FaceDetector{HAAR_DETECTOR, HOG_SVM_DETECTOR};
+	// MTCNN detector is much more accurate that the other two, and is even suitable for profile faces, but it is somewhat slower
+	enum FaceDetector{HAAR_DETECTOR, HOG_SVM_DETECTOR, MTCNN_DETECTOR};
 
-	string face_detector_location;
+	string haar_face_detector_location;
+	string mtcnn_face_detector_location;
 	FaceDetector curr_face_detector;
 
 	// Should the results be visualised and reported to console
@@ -108,7 +114,8 @@ struct FaceModelParameters
 
 	private:
 		void init();
-		void check_model_path(const std::string& root="/");
+		void check_model_path(const std::string& root = "/");
+
 };
 
 }

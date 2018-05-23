@@ -50,6 +50,8 @@ public:
     double                  certainty = 0.0f;
     cv::Rect                rBoundingBox;
     string                  sFaceID = "";
+    
+    //void draw();
 };
 
 // A class for sharing tracked data for a single face
@@ -63,6 +65,7 @@ class OpenFaceDataSingleFaceTracked : public ofxCv::Follower<OpenFaceDataSingleF
         void update(const OpenFaceDataSingleFace& track); // called by the tracker when an existing face is updated
         void kill(); // called by the tracker when an existing face is lost
         int getAgeSeconds() const;
+    // int getLastSeenMs() const; // when were you last seen?
 };
 
 class ofxOpenFace : public ofThread {
@@ -74,6 +77,7 @@ class ofxOpenFace : public ofThread {
         void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw = false);
         void drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data);
         void drawTrackedIntoMaterial(cv::Mat& mat);
+        // void drawDebug(); // put existing code here
         void exit();
         void stop();
         void resetFaceModel();
@@ -103,6 +107,9 @@ class ofxOpenFace : public ofThread {
         int                                             nImgHeight;  // the height of the image used for tracking
         int                                             nMaxFaces; // the maximum number of faces
         int                                             nFrameCount; // count the frames being tracked
+    
+        FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
+        FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
         vector<LandmarkDetector::CLNF>                  vFace_models;
         LandmarkDetector::CLNF                          face_model;
         vector<bool>                                    vActiveModels;

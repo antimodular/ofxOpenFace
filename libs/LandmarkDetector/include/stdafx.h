@@ -23,9 +23,13 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-// IplImage stuff
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc/imgproc_c.h>
+// OpenBLAS
+#include <cblas.h>
+#include <f77blas.h>
+
+// dlib dependencies for face detection
+#include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/opencv.h>
 
 // C++ stuff
 #include <stdio.h>

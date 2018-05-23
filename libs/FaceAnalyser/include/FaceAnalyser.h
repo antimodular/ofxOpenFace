@@ -107,7 +107,7 @@ public:
 private:
 
 	// Point distribution model coddesponding to the current Face Analyser
-	FaceAnalysis::PDM pdm;
+	LandmarkDetector::PDM pdm;
 
 	// Where the predictions are kept
 	std::vector<std::pair<std::string, double>> AU_predictions_reg;

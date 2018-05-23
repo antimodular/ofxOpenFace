@@ -38,6 +38,10 @@
 #include "RecorderHOG.h"
 #include "RecorderOpenFaceParameters.h"
 
+// For speeding up writing
+#include "tbb/concurrent_queue.h"
+#include "tbb/task_group.h"
+
 // System includes
 #include <vector>
 
@@ -71,17 +75,17 @@ namespace Utilities
 		void SetObservationTimestamp(double timestamp);
 
 		// Required observations for video/image-sequence
-		void SetObservationFrameNumber(double frame_number);
+		void SetObservationFrameNumber(int frame_number);
 
 		// If in multiple face mode, identifying which face was tracked
 		void SetObservationFaceID(int face_id);
 
 		// All observations relevant to facial landmarks
-		void SetObservationLandmarks(const cv::Mat_<double>& landmarks_2D, const cv::Mat_<double>& landmarks_3D, 
-			const cv::Vec6d& params_global, const cv::Mat_<double>& params_local, double confidence, bool success);
+		void SetObservationLandmarks(const cv::Mat_<float>& landmarks_2D, const cv::Mat_<float>& landmarks_3D,
+			const cv::Vec6f& params_global, const cv::Mat_<float>& params_local, double confidence, bool success);
 
 		// Pose related observations
-		void SetObservationPose(const cv::Vec6d& pose);
+		void SetObservationPose(const cv::Vec6f& pose);
 
 		// AU related observations
 		void SetObservationActionUnits(const std::vector<std::pair<std::string, double> >& au_intensities, 
@@ -89,7 +93,7 @@ namespace Utilities
 
 		// Gaze related observations
 		void SetObservationGaze(const cv::Point3f& gazeDirection0, const cv::Point3f& gazeDirection1,
-			const cv::Vec2d& gaze_angle, const std::vector<cv::Point2d>& eye_landmarks2D, const std::vector<cv::Point3d>& eye_landmarks3D);
+			const cv::Vec2f& gaze_angle, const std::vector<cv::Point2f>& eye_landmarks2D, const std::vector<cv::Point3f>& eye_landmarks3D);
 
 		// Face alignment related observations
 		void SetObservationFaceAlign(const cv::Mat& aligned_face);
@@ -99,11 +103,25 @@ namespace Utilities
 
 		void SetObservationVisualization(const cv::Mat &vis_track);
 
+		// Write out all observations for current face (except for tracked image/video)
 		void WriteObservation();
+
+		// Separate method for writing tracked video observation, this is done because video observation is written once a frame/image, other observations can happen multiple times a frame/image
+		void WriteObservationTracked();
 
 		std::string GetCSVFile() { return csv_filename; }
 
 	private:
+
+		// Used to keep track if the recording is still going (for the writing threads)
+		bool recording;
+
+		// For keeping track of tasks
+		tbb::task_group writing_threads;
+
+		// A thread that will write video output, so that the rest of the application does not block on it
+		void VideoWritingTask();
+		void AlignedImageWritingTask();
 
 		// Blocking copy, assignment and move operators, as it does not make sense to save to the same location
 		RecorderOpenFace & operator= (const RecorderOpenFace& other);
@@ -135,15 +153,15 @@ namespace Utilities
 		int frame_number;
 
 		// Facial landmark related observations
-		cv::Mat_<double> landmarks_2D;
-		cv::Mat_<double> landmarks_3D;
-		cv::Vec6d pdm_params_global;
-		cv::Mat_<double> pdm_params_local;
+		cv::Mat_<float> landmarks_2D;
+		cv::Mat_<float> landmarks_3D;
+		cv::Vec6f pdm_params_global;
+		cv::Mat_<float> pdm_params_local;
 		double landmark_detection_confidence;
 		bool landmark_detection_success;
 
 		// Head pose related observations
-		cv::Vec6d head_pose;
+		cv::Vec6f head_pose;
 
 		// Action Unit related observations
 		std::vector<std::pair<std::string, double> > au_intensities;
@@ -152,20 +170,23 @@ namespace Utilities
 		// Gaze related observations
 		cv::Point3f gaze_direction0;
 		cv::Point3f gaze_direction1;
-		cv::Vec2d gaze_angle;
-		std::vector<cv::Point2d> eye_landmarks2D;
-		std::vector<cv::Point3d> eye_landmarks3D;
-
-		int m_frame_number; // TODO this should be set
-		int m_face_id; // TODO this should be set
+		cv::Vec2f gaze_angle;
+		std::vector<cv::Point2f> eye_landmarks2D;
+		std::vector<cv::Point3f> eye_landmarks3D;
 
 		// For video writing
 		cv::VideoWriter video_writer;
 		std::string media_filename;
+		
+		// Do not exceed 100MB in the concurrent queue
+		const int TRACKED_QUEUE_CAPACITY = 100;
 		cv::Mat vis_to_out;
+		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > vis_to_out_queue;
 
 		// For aligned face writing
+		const int ALIGNED_QUEUE_CAPACITY = 100;
 		cv::Mat aligned_face;
+		tbb::concurrent_bounded_queue<std::pair<std::string, cv::Mat> > aligned_face_queue;
 
 	};
 }

@@ -56,8 +56,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __LANDMARK_DETECTION_VALIDATOR_h_
-#define __LANDMARK_DETECTION_VALIDATOR_h_
+#ifndef __FACE_DETECTOR_MTCNN_h_
+#define __FACE_DETECTOR_MTCNN_h_
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
@@ -65,77 +65,96 @@
 // System includes
 #include <vector>
 
-// Local includes
-#include "PAW.h"
-
 using namespace std;
 
 namespace LandmarkDetector
 {
-//===========================================================================
-//
-// Checking if landmark detection was successful using a CNN
-// Using multiple validators trained add different views
-// The regressor outputs 1 for ideal alignment and 0 for worst alignment
-//===========================================================================
-class DetectionValidator
-{
+	class CNN
+	{
+	public:
+
+		//==========================================
+
+		// Default constructor
+		CNN() { ; }
+
+		// Copy constructor
+		CNN(const CNN& other);
+
+		// Given an image apply a CNN on it, the boolean direct controls if direct convolution is used (through matrix multiplication) or an FFT optimization
+		std::vector<cv::Mat_<float> > Inference(const cv::Mat& input_img, bool direct = true, bool thread_safe = false);
+
+		// Reading in the model
+		void Read(const string& location);
+
+		// Clearing precomputed DFTs
+		void ClearPrecomp();
+
+		size_t NumberOfLayers() { return cnn_layer_types.size(); }
+
+	private:
+		//==========================================
+		// Convolutional Neural Network
+
+		// CNN layers
+		// Layer -> Weight matrix
+		vector<cv::Mat_<float> > cnn_convolutional_layers_weights;
+
+		// Keeping some pre-allocated im2col data as malloc is a significant time cost (not thread safe though)
+		vector<cv::Mat_<float> > conv_layer_pre_alloc_im2col;
+
+		// Layer -> kernel -> input maps
+		vector<vector<vector<cv::Mat_<float> > > > cnn_convolutional_layers;
+		vector<vector<float > > cnn_convolutional_layers_bias;
+		// Layer matrix + bas
+		vector<cv::Mat_<float> >  cnn_fully_connected_layers_weights;
+		vector<cv::Mat_<float> > cnn_fully_connected_layers_biases;
+		vector<cv::Mat_<float> >  cnn_prelu_layer_weights;
+		vector<std::tuple<int, int, int, int> > cnn_max_pooling_layers;
+
+		// Precomputations for faster convolution
+		vector<vector<map<int, vector<cv::Mat_<double> > > > > cnn_convolutional_layers_dft;
+
+		// CNN: 0 - convolutional, 1 - max pooling, 2 - fully connected, 3 - prelu, 4 - sigmoid
+		vector<int > cnn_layer_types;
+	};
+	//===========================================================================
+	//
+	// Checking if landmark detection was successful using an SVR regressor
+	// Using multiple validators trained add different views
+	// The regressor outputs -1 for ideal alignment and 1 for worst alignment
+	//===========================================================================
+	class FaceDetectorMTCNN
+	{
+
+	public:
+
+		// Default constructor
+		FaceDetectorMTCNN() { ; }
+
+		FaceDetectorMTCNN(const string& location);
+
+		// Copy constructor
+		FaceDetectorMTCNN(const FaceDetectorMTCNN& other);
+
+		// Given an image, orientation and detected landmarks output the result of the appropriate regressor
+		bool DetectFaces(vector<cv::Rect_<float> >& o_regions, const cv::Mat& input_img, std::vector<float>& o_confidences, int min_face = 60, float t1 = 0.6, float t2 = 0.7, float t3 = 0.7);
+
+		// Reading in the model
+		void Read(const string& location);
+
+		// Indicate if the model has been read in
+		bool empty() { return PNet.NumberOfLayers() == 0 || RNet.NumberOfLayers() == 0 || ONet.NumberOfLayers() == 0; };
+
+	private:
+		//==========================================
+		// Components of the model
+
+		CNN PNet;
+		CNN RNet;
+		CNN ONet;
 		
-public:    
-	
-	// The orientations of each of the landmark detection validator
-	vector<cv::Vec3d> orientations;
-
-	// Piecewise affine warps to the reference shape (per orientation)
-	vector<PAW>     paws;
-
-	//==========================================
-	// Convolutional Neural Network
-
-	// CNN layers for each view
-	// view -> layer
-	vector<vector<vector<vector<cv::Mat_<float> > > > > cnn_convolutional_layers;
-	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_weights;
-	vector<vector<cv::Mat_<float> > > cnn_convolutional_layers_im2col_precomp;
-
-	vector< vector<int> > cnn_subsampling_layers;
-	vector< vector<cv::Mat_<float> > > cnn_fully_connected_layers_weights;
-	vector< vector<cv::Mat_<float>  > > cnn_fully_connected_layers_biases;
-	// NEW CNN: 0 - convolutional, 1 - max pooling (2x2 stride 2), 2 - fully connected, 3 - relu, 4 - sigmoid
-	vector<vector<int> > cnn_layer_types;
-	
-	//==========================================
-
-	// Normalisation for face validation
-	vector<cv::Mat_<float> > mean_images;
-	vector<cv::Mat_<float> > standard_deviations;
-
-	// Default constructor
-	DetectionValidator(){;}
-
-	// Copy constructor
-	DetectionValidator(const DetectionValidator& other);
-
-	// Given an image, orientation and detected landmarks output the result of the appropriate regressor
-	float Check(const cv::Vec3d& orientation, const cv::Mat_<uchar>& intensity_img, cv::Mat_<float>& detected_landmarks);
-
-	// Reading in the model
-	void Read(string location);
-			
-	// Getting the closest view center based on orientation
-	int GetViewId(const cv::Vec3d& orientation) const;
-
-private:
-
-	// The actual regressor application on the image
-
-	// Convolutional Neural Network
-	double CheckCNN(const cv::Mat_<float>& warped_img, int view_id);
-
-	// A normalisation helper
-	void NormaliseWarpedToVector(const cv::Mat_<float>& warped_img, cv::Mat_<float>& feature_vec, int view_id);
-
-};
+	};
 
 }
 #endif

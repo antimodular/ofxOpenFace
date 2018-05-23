@@ -75,7 +75,7 @@ namespace Utilities
 		cv::Mat_<uchar> GetGrayFrame();
 
 		// Return bounding boxes associated with the image (if defined)
-		std::vector<cv::Rect_<double> > GetBoundingBoxes();
+		std::vector<cv::Rect_<float> > GetBoundingBoxes();
 
 		// Parameters describing the sequence and it's progress (what's the proportion of images opened)
 		double GetProgress();
@@ -107,7 +107,7 @@ namespace Utilities
 		std::vector<std::string> image_files;
 
 		// Could optionally read the bounding box locations from files (each image could have multiple bounding boxes)
-		std::vector<std::vector<cv::Rect_<double> > > bounding_boxes;
+		std::vector<std::vector<cv::Rect_<float> > > bounding_boxes;
 
 		void SetCameraIntrinsics(float fx, float fy, float cx, float cy);
 

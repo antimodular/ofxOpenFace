@@ -50,89 +50,89 @@ namespace LandmarkDetector
 	  The code is based on the CLM tracker by Jason Saragih et al.
   */	
 
-class PAW{
-public:    
-	// Number of pixels after the warping to neutral shape
-    int     number_of_pixels; 
+	class PAW {
+	public:
+		// Number of pixels after the warping to neutral shape
+		int     number_of_pixels;
 
-	// Minimum x coordinate in destination
-    double  min_x;
+		// Minimum x coordinate in destination
+		float  min_x;
 
-	// minimum y coordinate in destination
-    double  min_y;
+		// minimum y coordinate in destination
+		float  min_y;
 
-	// Destination points (landmarks to be warped to)
-	cv::Mat_<double> destination_landmarks;
+		// Destination points (landmarks to be warped to)
+		cv::Mat_<float> destination_landmarks;
 
-	// Destination points (landmarks to be warped from)
-	cv::Mat_<double> source_landmarks;
+		// Destination points (landmarks to be warped from)
+		cv::Mat_<float> source_landmarks;
 
-	// Triangulation, each triangle is warped using an affine transform
-	cv::Mat_<int> triangulation;
+		// Triangulation, each triangle is warped using an affine transform
+		cv::Mat_<int> triangulation;
 
-	// Triangle index, indicating which triangle each of destination pixels lies in
-	cv::Mat_<int> triangle_id;
+		// Triangle index, indicating which triangle each of destination pixels lies in
+		cv::Mat_<int> triangle_id;
 
-	// Indicating if the destination warped pixels is valid (lies within a face)
-	cv::Mat_<uchar> pixel_mask;
+		// Indicating if the destination warped pixels is valid (lies within a face)
+		cv::Mat_<uchar> pixel_mask;
 
-	// A number of precomputed coefficients that are helpful for quick warping
-	
-	// affine coefficients for all triangles (see Matthews and Baker 2004)
-	// 6 coefficients for each triangle (are computed from alpha and beta)
-	// This is computed during each warp based on source landmarks
-	cv::Mat_<double> coefficients;
+		// A number of precomputed coefficients that are helpful for quick warping
 
-	// matrix of (c,x,y) coeffs for alpha
-	cv::Mat_<double> alpha;
+		// affine coefficients for all triangles (see Matthews and Baker 2004)
+		// 6 coefficients for each triangle (are computed from alpha and beta)
+		// This is computed during each warp based on source landmarks
+		cv::Mat_<float> coefficients;
 
-	// matrix of (c,x,y) coeffs for alpha
-	cv::Mat_<double> beta;
+		// matrix of (c,x,y) coeffs for alpha
+		cv::Mat_<float> alpha;
 
-	// x-source of warped points
-	cv::Mat_<float> map_x;
+		// matrix of (c,x,y) coeffs for alpha
+		cv::Mat_<float> beta;
 
-	// y-source of warped points
-	cv::Mat_<float> map_y;
+		// x-source of warped points
+		cv::Mat_<float> map_x;
 
-	// Default constructor
-    PAW(){;}
+		// y-source of warped points
+		cv::Mat_<float> map_y;
 
-	// Construct a warp from a destination shape and triangulation
-	PAW(const cv::Mat_<double>& destination_shape, const cv::Mat_<int>& triangulation);
+		// Default constructor
+		PAW() { ; }
 
-	// The final optional argument allows for optimisation if the triangle indices from previous frame are known (for tracking in video)
-	PAW(const cv::Mat_<double>& destination_shape, const cv::Mat_<int>& triangulation, double in_min_x, double in_min_y, double in_max_x, double in_max_y);
+		// Construct a warp from a destination shape and triangulation
+		PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation);
 
-	// Copy constructor
-	PAW(const PAW& other);
+		// The final optional argument allows for optimisation if the triangle indices from previous frame are known (for tracking in video)
+		PAW(const cv::Mat_<float>& destination_shape, const cv::Mat_<int>& triangulation, float in_min_x, float in_min_y, float in_max_x, float in_max_y);
 
-	void Read(std::ifstream &s);
+		// Copy constructor
+		PAW(const PAW& other);
 
-	// The actual warping
-    void Warp(const cv::Mat& image_to_warp, cv::Mat& destination_image, const cv::Mat_<double>& landmarks_to_warp);
-	
-	// Compute coefficients needed for warping
-    void CalcCoeff();
+		void Read(std::ifstream &s);
 
-	// Perform the actual warping
-    void WarpRegion(cv::Mat_<float>& map_x, cv::Mat_<float>& map_y);
+		// The actual warping
+		void Warp(const cv::Mat& image_to_warp, cv::Mat& destination_image, const cv::Mat_<float>& landmarks_to_warp);
 
-    inline int NumberOfLandmarks() const {return destination_landmarks.rows/2;} ;
-    inline int NumberOfTriangles() const {return triangulation.rows;} ;
+		// Compute coefficients needed for warping
+		void CalcCoeff();
 
-	// The width and height of the warped image
-    inline int constWidth() const {return pixel_mask.cols;}
-    inline int Height() const {return pixel_mask.rows;}
-    
-private:
+		// Perform the actual warping
+		void WarpRegion(cv::Mat_<float>& map_x, cv::Mat_<float>& map_y);
 
-	// Helper functions for dealing with triangles
-	static bool sameSide(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
-	static bool pointInTriangle(double x0, double y0, double x1, double y1, double x2, double y2, double x3, double y3);
-	static int findTriangle(const cv::Point_<double>& point, const std::vector<std::vector<double>>& control_points, int guess = -1);
+		inline int NumberOfLandmarks() const { return destination_landmarks.rows / 2; };
+		inline int NumberOfTriangles() const { return triangulation.rows; };
 
-  };
-  //===========================================================================
+		// The width and height of the warped image
+		inline int constWidth() const { return pixel_mask.cols; }
+		inline int Height() const { return pixel_mask.rows; }
+
+	private:
+
+		// Helper functions for dealing with triangles
+		static bool sameSide(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3);
+		static bool pointInTriangle(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3);
+		static int findTriangle(const cv::Point_<float>& point, const std::vector<std::vector<float>>& control_points, int guess = -1);
+
+	};
+	//===========================================================================
 }
 #endif

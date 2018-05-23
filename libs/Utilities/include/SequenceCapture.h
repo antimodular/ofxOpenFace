@@ -39,6 +39,10 @@
 #include <sstream>
 #include <vector>
 
+// For speeding up capture
+#include "tbb/concurrent_queue.h"
+#include "tbb/task_group.h"
+
 // OpenCV includes
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -85,7 +89,7 @@ namespace Utilities
 		// Parameters describing the sequence and it's progress
 		double GetProgress();
 
-		int GetFrameNumber() { return frame_num; }
+		size_t GetFrameNumber() { return frame_num; }
 
 		bool IsOpened();
 
@@ -109,6 +113,17 @@ namespace Utilities
 
 	private:
 
+		// For faster input, multi-thread the capture so it is not waiting for processing to be done
+
+		// Used to keep track if the recording is still going (for the writing threads)
+		bool capturing;
+
+		// For keeping track of tasks
+		tbb::task_group capture_threads;
+
+		// A thread that will write video output, so that the rest of the application does not block on it
+		void CaptureThread();
+
 		// Blocking copy and move, as it doesn't make sense to have several readers pointed at the same source, and this would cause issues, especially with webcams
 		SequenceCapture & operator= (const SequenceCapture& other);
 		SequenceCapture & operator= (const SequenceCapture&& other);
@@ -122,6 +137,12 @@ namespace Utilities
 		cv::Mat latest_frame;
 		cv::Mat_<uchar> latest_gray_frame;
 		
+
+		// Storing the captured data queue
+		const int CAPTURE_CAPACITY = 200; // 200 MB
+		// Storing capture timestamp, RGB image, gray image
+		tbb::concurrent_bounded_queue<std::tuple<double, cv::Mat, cv::Mat_<uchar> > > capture_queue;
+
 		// Keeping track of frame number and the files in the image sequence
 		size_t  frame_num;
 		std::vector<std::string> image_files;

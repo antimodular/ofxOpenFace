@@ -33,82 +33,63 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#ifndef __SVR_PATCH_EXPERT_h_
-#define __SVR_PATCH_EXPERT_h_
+#ifndef __CEN_PATCH_EXPERT_h_
+#define __CEN_PATCH_EXPERT_h_
 
 // system includes
-#include <map>
+#include <vector>
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>
 
 namespace LandmarkDetector
 {
-  //===========================================================================
-  /** 
-      The classes describing the SVR patch experts
-  */
+	//===========================================================================
+	/**
+	The classes describing the CEN patch experts
+	*/
 
-class SVR_patch_expert{
+	class CEN_patch_expert {
 	public:
 
-		// Type of data the patch expert operated on (0=raw, 1=grad)
-		int     type;					
+		// Width and height of the patch expert support area
+		int width_support;
+		int height_support;
 
-		// Logistic regression slope
-		double  scaling;
+		// Neural weights
+		std::vector<cv::Mat_<float>> biases;
+
+		// Neural weights
+		std::vector<cv::Mat_<float>> weights;
+
+		std::vector<int> activation_function;
 		
-		// Logistic regression bias
-		double  bias;
-
-		// Support vector regression weights
-		cv::Mat_<float> weights;
-
-		// Discrete Fourier Transform of SVR weights, precalculated for speed (at different window sizes)
-		std::map<int, cv::Mat_<double> > weights_dfts;
-
 		// Confidence of the current patch expert (used for NU_RLMS optimisation)
 		double  confidence;
 
-		SVR_patch_expert(){;}
-		
+		CEN_patch_expert() { ; }
+
 		// A copy constructor
-		SVR_patch_expert(const SVR_patch_expert& other);
+		CEN_patch_expert(const CEN_patch_expert& other);
 
 		// Reading in the patch expert
 		void Read(std::ifstream &stream);
 
-		// The actual response computation from intensity or depth (for CLM-Z)
+		// The actual response computation from intensity image
 		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
-		void ResponseDepth(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
-};
-//===========================================================================
-/**
-    A Multi-patch Expert that can include different patch types. Raw pixel values or image gradients
-*/
-class Multi_SVR_patch_expert{
-	public:
-		
-		// Width and height of the patch expert support area
-		int width;
-		int height;						
+		// Faster version of the response that only considers a subset of the area_of_interest
+		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
 
-		// Vector of all of the patch experts (different modalities) for this particular Multi patch expert
-		std::vector<SVR_patch_expert> svr_patch_experts;	
+		// To save memory use a mirrored version of the expert instead of storing the weights
+		void ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
 
-		// Default constructor
-		Multi_SVR_patch_expert(){;}
-	
-		// Copy constructor				
-		Multi_SVR_patch_expert(const Multi_SVR_patch_expert& other);
+		// For frontal faces can apply mirrored and non-mirrored experts at the same time
+		void ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right);
 
-		void Read(std::ifstream &stream);
+	};
 
-		// actual response computation from intensity of depth (for CLM-Z)
-		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
-		void ResponseDepth(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
+	void interpolationMatrix(cv::Mat_<float>& mapMatrix, int response_height, int response_width, int input_width, int input_height);
 
-};
 }
 #endif

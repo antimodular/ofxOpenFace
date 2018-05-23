@@ -37,8 +37,10 @@
 
 // OpenCV dependencies
 #include <opencv2/core/core.hpp>
-//#include <opencv2/objdetect.hpp>
-#include <opencv2/objdetect/objdetect.hpp>
+#include <opencv2/objdetect.hpp>
+
+// OpenBLAS
+#include <cblas.h>
 
 // dlib dependencies for face detection
 #include <dlib/image_processing/frontal_face_detector.h>
@@ -48,6 +50,7 @@
 #include "Patch_experts.h"
 #include "LandmarkDetectionValidator.h"
 #include "LandmarkDetectorParameters.h"
+#include "FaceDetectorMTCNN.h"
 
 using namespace std;
 
@@ -73,10 +76,10 @@ public:
 	// The local and global parameters describing the current model instance (current landmark detections)
 
 	// Local parameters describing the non-rigid shape
-	cv::Mat_<double>    params_local;
+	cv::Mat_<float>    params_local;
 
 	// Global parameters describing the rigid shape [scale, euler_x, euler_y, euler_z, tx, ty]
-	cv::Vec6d           params_global;
+	cv::Vec6f           params_global;
 
 	// A collection of hierarchical CLNF models that can be used for refinement
 	vector<CLNF>					hierarchical_models;
@@ -86,22 +89,29 @@ public:
 
 	//==================== Helpers for face detection and landmark detection validation =========================================
 
+	// TODO these should be static, and loading should be made easier
+
 	// Haar cascade classifier for face detection
 	cv::CascadeClassifier   face_detector_HAAR;
-	string                  face_detector_location;
-
+	string                  haar_face_detector_location;
+	
 	// A HOG SVM-struct based face detector
 	dlib::frontal_face_detector face_detector_HOG;
 
+	FaceDetectorMTCNN		face_detector_MTCNN;
+	string                  mtcnn_face_detector_location;
 
-	// Validate if the detected landmarks are correct using a predictor on detected landmarks
+	// Validate if the detected landmarks are correct using an SVR regressor
 	DetectionValidator	landmark_validator; 
 
-	// Indicating if landmark detection succeeded (based on detection validator)
+	// Indicating if landmark detection succeeded (based on SVR validator)
 	bool				detection_success; 
 
-	//  Representing how confident we are that tracking succeeds (0 - complete failure, 1 - perfect success)
-	double				detection_certainty; 
+	// Indicating if the tracking has been initialised (for video based tracking)
+	bool				tracking_initialised;
+
+	// The actual output of the regressor (-1 is perfect detection 1 is worst detection)
+	float				detection_certainty;
 
 	// Indicator if eye model is there for eye detection
 	bool				eye_model;
@@ -113,11 +123,11 @@ public:
 	// Member variables that retain the state of the tracking (reflecting the state of the lastly tracked (detected) image
 
 	// Lastly detect 2D model shape [x1,x2,...xn,y1,...yn]
-	cv::Mat_<double>		detected_landmarks;
+	cv::Mat_<float>			detected_landmarks;
 	
 	// The landmark detection likelihoods (combined and per patch expert)
-	double				model_likelihood;
-	cv::Mat_<double>		landmark_likelihoods;
+	float					model_likelihood;
+	cv::Mat_<float>			landmark_likelihoods;
 	
 	// Keeping track of how many frames the tracker has failed in so far when tracking in videos
 	// This is useful for knowing when to initialise and reinitialise tracking
@@ -128,7 +138,13 @@ public:
 
 	// Useful when resetting or initialising the model closer to a specific location (when multiple faces are present)
 	cv::Point_<double> preference_det;
-	
+
+	// Tracking which view was used last
+	int view_used;
+
+	// See if the model was read in correctly
+	bool loaded_successfully;
+
 	// A default constructor
 	CLNF();
 
@@ -155,10 +171,10 @@ public:
 	
 	// Gets the shape of the current detected landmarks in camera space (given camera calibration)
 	// Can only be called after a call to DetectLandmarksInVideo or DetectLandmarksInImage
-	cv::Mat_<double> GetShape(double fx, double fy, double cx, double cy) const;
+	cv::Mat_<float> GetShape(float fx, float fy, float cx, float cy) const;
 
 	// A utility bounding box function
-	cv::Rect_<double> GetBoundingBox() const;
+	cv::Rect_<float> GetBoundingBox() const;
 
 	// Get the currently non-self occluded landmarks
 	cv::Mat_<int> GetVisibilities() const;
@@ -171,20 +187,11 @@ public:
 
 	// Reading the model in
 	void Read(string name);
-
-	// Helper reading function
-	void Read_CLNF(string clnf_location);
 	
-	// Allows to set initialization accross hierarchical models as well
-	bool IsInitialized() const { return tracking_initialised; }
-	void SetInitialized(bool initialized);
-	void SetDetectionSuccess(bool detection_success);
-
 private:
 
-
-	// Indicating if the tracking has been initialised (for video based tracking)
-	bool				tracking_initialised;
+	// Helper reading function
+	bool Read_CLNF(string clnf_location);
 
 	// the speedup of RLMS using precalculated KDE responses (described in Saragih 2011 RLMS paper)
 	map<int, cv::Mat_<float> >		kde_resp_precalc;
@@ -196,21 +203,11 @@ private:
 	void NonVectorisedMeanShift_precalc_kde(cv::Mat_<float>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<float> &dxs, const cv::Mat_<float> &dys, int resp_size, float a, int scale, int view_id, map<int, cv::Mat_<float> >& mean_shifts);
 
 	// The actual model optimisation (update step), returns the model likelihood
-    double NU_RLMS(cv::Vec6d& final_global, cv::Mat_<double>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6d& initial_global, const cv::Mat_<double>& initial_local,
-		          const cv::Mat_<double>& base_shape, const cv::Matx22d& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<double>& landmark_lhoods, const FaceModelParameters& parameters);
+    float NU_RLMS(cv::Vec6f& final_global, cv::Mat_<float>& final_local, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Vec6f& initial_global, const cv::Mat_<float>& initial_local,
+		          const cv::Mat_<float>& base_shape, const cv::Matx22f& sim_img_to_ref, const cv::Matx22f& sim_ref_to_img, int resp_size, int view_idx, bool rigid, int scale, cv::Mat_<float>& landmark_lhoods, const FaceModelParameters& parameters, bool compute_lhood);
 
 	// Generating the weight matrix for the Weighted least squares
 	void GetWeightMatrix(cv::Mat_<float>& WeightMatrix, int scale, int view_id, const FaceModelParameters& parameters);
-
-	//=======================================================
-	// Legacy functions that are not used at the moment
-	//=======================================================
-
-	// Mean shift computation	
-	void NonVectorisedMeanShift(cv::Mat_<double>& out_mean_shifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<double> &dxs, const cv::Mat_<double> &dys, int resp_size, double a, int scale, int view_id);
-
-	// A vectorised version of mean shift (Not actually used)
-	void VectorisedMeanShift(cv::Mat_<double>& meanShifts, const vector<cv::Mat_<float> >& patch_expert_responses, const cv::Mat_<double> &iis, const cv::Mat_<double> &jjs, const cv::Mat_<double> &dxs, const cv::Mat_<double> &dys, const cv::Size patchSize, double sigma, int scale, int view_id);
 
   };
   //===========================================================================

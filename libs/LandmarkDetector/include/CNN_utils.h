@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, Carnegie Mellon University and University of Cambridge,
-// all rights reserved.
+// Copyright (C) 2017, Tadas Baltrusaitis, all rights reserved.
 //
 // ACADEMIC OR NON-PROFIT ORGANIZATION NONCOMMERCIAL RESEARCH USE ONLY
 //
@@ -32,73 +31,36 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//  Parameters of the Face analyser
-#ifndef __FACE_ANALYSER_PARAM_H
-#define __FACE_ANALYSER_PARAM_H
+//  Header for all external CLNF/CLM-Z/CLM methods of interest to the user
+#ifndef __CNN_UTILS_h_
+#define __CNN_UTILS_h_
 
-#include <vector>
+// OpenCV includes
 #include <opencv2/core/core.hpp>
-
-// Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
 
 using namespace std;
 
-namespace FaceAnalysis
+namespace LandmarkDetector
 {
+	//===========================================================================	
+	// Various CNN layers
 
-struct FaceAnalyserParameters
-{
-public:
-	// Constructors
-	FaceAnalyserParameters();
-	FaceAnalyserParameters(string root_exe);
-	FaceAnalyserParameters(vector<string> &arguments);
+	// Parametric ReLU with leaky weights (separate ones per channel)
+	void PReLU(std::vector<cv::Mat_<float> >& input_output_maps, cv::Mat_<float> prelu_weights);
 
-	// These are the parameters of training and will not change and are fixed
-	const double sim_scale_au = 0.7;
-	const int sim_size_au = 112;
+	// The fully connected layer
+	void fully_connected(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, cv::Mat_<float> weights, cv::Mat_<float> biases);
 
-	// Should the output aligned faces be grayscale
-	bool grayscale;
+	// Max pooling layer with parametrized stride and kernel sizes
+	void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, int stride_x, int stride_y, int kernel_size_x, int kernel_size_y);
 
-	// Use getters and setters for these as they might need to reload models and make sure the scale and size ratio makes sense
-	void setAlignedOutput(int output_size, double scale=-1, bool masked = true);
-	// This will also change the model location
-	void OptimizeForVideos();
-	void OptimizeForImages();
+	// Convolution using FFT optimization rather than matrix multiplication
+	void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<map<int, vector<cv::Mat_<double> > > >& precomp_dfts);
+	
+	// Convolution using matrix multiplication and OpenBLAS optimization
+	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k);
 
-	bool getAlignMask() const { return sim_align_face_mask; }
-	double getSimScaleOut() const { return sim_scale_out; }
-	int getSimSizeOut() const { return sim_size_out; }
-	bool getDynamic() const { return dynamic; }
-	string getModelLoc() const { return string(model_location); }
-	vector<cv::Vec3d> getOrientationBins() const { return vector<cv::Vec3d>(orientation_bins); }
-
-private:
-
-	void init();
-
-	// Aligned face output size
-	double sim_scale_out;
-	int sim_size_out;
-
-	// Should aligned face be masked out from background
-	bool sim_align_face_mask;
-
-	// Should a video stream be assumed
-	bool dynamic;
-
-	// Where to load the models from
-	string model_location;
-	// The location of the executable
-	boost::filesystem::path root;
-
-	vector<cv::Vec3d> orientation_bins;
-
-};
-
+	// Convolution using matrix multiplication and OpenBLAS optimization (non thread safe but faster)
+	void convolution_direct_blas_nts(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col);
 }
-
-#endif // __FACE_ANALYSER_PARAM_H
+#endif

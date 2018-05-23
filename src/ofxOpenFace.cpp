@@ -64,6 +64,21 @@ void ofxOpenFace::setupMultipleFaces(bool bUseHOGSVM) {
     }
     vDet_parameters.push_back(dp);
     
+    // The face analysis logic
+    string rootDir = ofFilePath::getAbsolutePath("");
+    ofLogNotice("ofxOpenFace", "Face analysis root dir: '" + rootDir + "'");
+    pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters(rootDir);
+    //pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters();
+    pFace_analysis_params->OptimizeForImages();
+    pFace_analyser = new FaceAnalysis::FaceAnalyser(*pFace_analysis_params);
+    
+    ofLogNotice("ofxOpenFace", "Face analysis model location: '" + pFace_analysis_params->getModelLoc() + "'");
+    
+    if (pFace_analyser->GetAUClassNames().size() == 0 && pFace_analyser->GetAUClassNames().size() == 0)
+    {
+        ofLogWarning("ofxOpenFace", "No Action Unit models found.");
+    }
+    
     // The modules that are being used for tracking
     face_model = LandmarkDetector::CLNF(modelLocation);
     if (!bUseHOGSVM) {
@@ -273,9 +288,6 @@ void ofxOpenFace::threadedFunction() {
     ofLogNotice("ofxOpenFace", "Thread started.");
     
     while(!bExit) {
-        float fSmoothing = 0.9f;
-        int timeBeforeMs = ofGetElapsedTimeMillis();
-        
         // Do we have an image to process?
         if (!bHaveNewImage) {
             ofSleepMillis(20);

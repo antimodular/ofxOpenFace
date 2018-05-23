@@ -44,17 +44,17 @@ namespace Utilities
 	//===========================================================================
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	static cv::Matx33d Euler2RotationMatrix(const cv::Vec3d& eulerAngles)
+	static cv::Matx33f Euler2RotationMatrix(const cv::Vec3f& eulerAngles)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 
-		double s1 = sin(eulerAngles[0]);
-		double s2 = sin(eulerAngles[1]);
-		double s3 = sin(eulerAngles[2]);
+		float s1 = sin(eulerAngles[0]);
+		float s2 = sin(eulerAngles[1]);
+		float s3 = sin(eulerAngles[2]);
 
-		double c1 = cos(eulerAngles[0]);
-		double c2 = cos(eulerAngles[1]);
-		double c3 = cos(eulerAngles[2]);
+		float c1 = cos(eulerAngles[0]);
+		float c2 = cos(eulerAngles[1]);
+		float c3 = cos(eulerAngles[2]);
 
 		rotation_matrix(0, 0) = c2 * c3;
 		rotation_matrix(0, 1) = -c2 *s3;
@@ -70,62 +70,66 @@ namespace Utilities
 	}
 
 	// Using the XYZ convention R = Rx * Ry * Rz, left-handed positive sign
-	static cv::Vec3d RotationMatrix2Euler(const cv::Matx33d& rotation_matrix)
+	static cv::Vec3f RotationMatrix2Euler(const cv::Matx33f& rotation_matrix)
 	{
-		double q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;
-		double q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0*q0);
-		double q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0*q0);
-		double q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0*q0);
+		float q0 = sqrt(1 + rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0f;
+		float q1 = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0f*q0);
+		float q2 = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0f*q0);
+		float q3 = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0f*q0);
 
-		double t1 = 2.0 * (q0*q2 + q1*q3);
+		// Slower, but dealing with degenerate cases due to precision
+		float t1 = 2.0f * (q0*q2 + q1*q3);
+		if (t1 > 1) t1 = 1.0f;
+		if (t1 < -1) t1 = -1.0f;
 
-		double yaw = asin(2.0 * (q0*q2 + q1*q3));
-		double pitch = atan2(2.0 * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
-		double roll = atan2(2.0 * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
+		float yaw = asin(t1);
+		float pitch = atan2(2.0f * (q0*q1 - q2*q3), q0*q0 - q1*q1 - q2*q2 + q3*q3);
+		float roll = atan2(2.0f * (q0*q3 - q1*q2), q0*q0 + q1*q1 - q2*q2 - q3*q3);
 
-		return cv::Vec3d(pitch, yaw, roll);
+		return cv::Vec3f(pitch, yaw, roll);
 	}
 
-	static cv::Vec3d Euler2AxisAngle(const cv::Vec3d& euler)
+	static cv::Vec3f Euler2AxisAngle(const cv::Vec3f& euler)
 	{
-		cv::Matx33d rotMatrix = Euler2RotationMatrix(euler);
-		cv::Vec3d axis_angle;
+		cv::Matx33f rotMatrix = Euler2RotationMatrix(euler);
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotMatrix, axis_angle);
 		return axis_angle;
 	}
 
-	static cv::Vec3d AxisAngle2Euler(const cv::Vec3d& axis_angle)
+	static cv::Vec3f AxisAngle2Euler(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return RotationMatrix2Euler(rotation_matrix);
 	}
 
-	static cv::Matx33d AxisAngle2RotationMatrix(const cv::Vec3d& axis_angle)
+	static cv::Matx33f AxisAngle2RotationMatrix(const cv::Vec3f& axis_angle)
 	{
-		cv::Matx33d rotation_matrix;
+		cv::Matx33f rotation_matrix;
 		cv::Rodrigues(axis_angle, rotation_matrix);
 		return rotation_matrix;
 	}
 
-	static cv::Vec3d RotationMatrix2AxisAngle(const cv::Matx33d& rotation_matrix)
+	static cv::Vec3f RotationMatrix2AxisAngle(const cv::Matx33f& rotation_matrix)
 	{
-		cv::Vec3d axis_angle;
+		cv::Vec3f axis_angle;
 		cv::Rodrigues(rotation_matrix, axis_angle);
 		return axis_angle;
 	}
 
 	// Generally useful 3D functions
-	static void Project(cv::Mat_<double>& dest, const cv::Mat_<double>& mesh, double fx, double fy, double cx, double cy)
+	static void Project(cv::Mat_<float>& dest, const cv::Mat_<float>& mesh, float fx, float fy, float cx, float cy)
 	{
-		dest = cv::Mat_<double>(mesh.rows, 2, 0.0);
+		dest = cv::Mat_<float>(mesh.rows, 2, 0.0);
 
 		int num_points = mesh.rows;
 
-		double X, Y, Z;
+		float X, Y, Z;
 
-		cv::Mat_<double>::const_iterator mData = mesh.begin();
-		cv::Mat_<double>::iterator projected = dest.begin();
+
+		cv::Mat_<float>::const_iterator mData = mesh.begin();
+		cv::Mat_<float>::iterator projected = dest.begin();
 
 		for (int i = 0; i < num_points; i++)
 		{
@@ -134,8 +138,8 @@ namespace Utilities
 			Y = *(mData++);
 			Z = *(mData++);
 
-			double x;
-			double y;
+			float x;
+			float y;
 
 			// if depth is 0 the projection is different
 			if (Z != 0)
