@@ -20,6 +20,7 @@ namespace ofxCv {
 #include "LandmarkCoreIncludes.h"
 #include <VisualizationUtils.h>
 #include <Visualizer.h>
+#include <RotationHelpers.h>
 #include <SequenceCapture.h>
 #include <RecorderOpenFace.h>
 #include <RecorderOpenFaceParameters.h>
@@ -44,9 +45,9 @@ public:
     cv::Point3f             gazeLeftEye;
     cv::Point3f             gazeRightEye;
     cv::Vec6d               pose;
-    vector<cv::Point2d>     allLandmarks2D;
-    vector<cv::Point2d>     eyeLandmarks2D;
-    vector<cv::Point3d>     eyeLandmarks3D;
+    vector<cv::Point2f>     allLandmarks2D;
+    vector<cv::Point2f>     eyeLandmarks2D;
+    vector<cv::Point3f>     eyeLandmarks3D;
     double                  certainty = 0.0f;
     cv::Rect                rBoundingBox;
     string                  sFaceID = "";
@@ -100,7 +101,7 @@ class ofxOpenFace : public ofThread {
         void setFPS(float value);
         void drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data);
     
-        static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double>>& face_detections);
+        static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float>>& face_detections);
     
         int                                             fx, fy, cx, cy;
         int                                             nImgWidth;   // the width of the image used for tracking

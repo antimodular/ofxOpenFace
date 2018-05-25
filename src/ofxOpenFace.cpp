@@ -83,7 +83,7 @@ void ofxOpenFace::setupMultipleFaces(bool bUseHOGSVM) {
     face_model = LandmarkDetector::CLNF(modelLocation);
     if (!bUseHOGSVM) {
         face_model.face_detector_HAAR.load(detectorLocationHAAR);
-        face_model.face_detector_location = detectorLocationHAAR;
+        face_model.haar_face_detector_location = detectorLocationHAAR;
     }
     
     vFace_models.reserve(nMaxFaces);
@@ -110,7 +110,9 @@ OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     
     // The actual facial landmark detection / tracking
     OpenFaceDataSingleFace faceData;
-    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+    //faceData.detected = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_model, det_parameters);
+    
+    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_model, det_parameters, grayscale_image);
      
     // If tracking succeeded and we have an eye model, estimate gaze
     if (faceData.detected && face_model.eye_model)
@@ -147,7 +149,7 @@ vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     cv::Mat grayscale_image = matToProcessGrayScale;
     mutexImage.unlock();
     
-    vector<cv::Rect_<double> > face_detections;
+    vector<cv::Rect_<float> > face_detections;
     
     bool all_models_active = true;
     for(unsigned int model = 0; model < vFace_models.size(); ++model)
@@ -161,14 +163,14 @@ vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Get the detections (every 8th frame and when there are free models available for tracking)
     if(nFrameCount % 8 == 0 && !all_models_active)
     {
+        vector<float> confidences;
         if(vDet_parameters[0].curr_face_detector == LandmarkDetector::FaceModelParameters::HOG_SVM_DETECTOR)
         {
-            vector<double> confidences;
             LandmarkDetector::DetectFacesHOG(face_detections, grayscale_image, vFace_models[0].face_detector_HOG, confidences);
         }
         else
         {
-            LandmarkDetector::DetectFaces(face_detections, grayscale_image, vFace_models[0].face_detector_HAAR);
+            LandmarkDetector::DetectFacesMTCNN(face_detections, grayscale_image, vFace_models[0].face_detector_MTCNN, confidences);
         }
     }
     
@@ -207,7 +209,7 @@ vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
                     
                     // This ensures that a wider window is used for the initial landmark localisation
                     vFace_models[model].detection_success = false;
-                    detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, face_detections[detection_ind], vFace_models[model], vDet_parameters[model]);
+                    detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, face_detections[detection_ind], vFace_models[model], vDet_parameters[model], grayscale_image);
                     
                     // This activates the model
                     vActiveModels[model] = true;
@@ -220,7 +222,7 @@ vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
         else
         {
             // The actual facial landmark detection / tracking
-            detection_success = LandmarkDetector::DetectLandmarksInVideo(grayscale_image, vFace_models[model], vDet_parameters[model]);
+            detection_success = LandmarkDetector::DetectLandmarksInVideo(captured_image, vFace_models[model], vDet_parameters[model], grayscale_image);
         }
         
         vData[model].detected = detection_success;
@@ -326,12 +328,12 @@ int ofxOpenFace::getFPS() {
     return nToReturn;
 }
 
-void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<double> >& face_detections) {
+void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float> >& face_detections) {
     // Go over the model and eliminate detections that are not informative (there already is a tracker there)
     for(size_t model = 0; model < clnf_models.size(); ++model)
     {        
         // See if the detections intersect
-        cv::Rect_<double> model_rect = clnf_models[model].GetBoundingBox();
+        cv::Rect_<float> model_rect = clnf_models[model].GetBoundingBox();
         
         for(int detection = face_detections.size()-1; detection >=0; --detection)
         {
@@ -445,8 +447,8 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
     cv::Mat cameraMat = (cv::Mat_<double>(3, 3) << fx, 0, cx, 0, fy, cy, 0, 0, 0);
     
     // Grabbing the pupil location, to draw eye gaze need to know where the pupil is
-    cv::Point3d pupil_left(0, 0, 0);
-    cv::Point3d pupil_right(0, 0, 0);
+    cv::Point3f pupil_left(0, 0, 0);
+    cv::Point3f pupil_right(0, 0, 0);
     for (size_t i = 0; i < 8; ++i)
     {
         pupil_left = pupil_left + data.eyeLandmarks3D[i];
@@ -457,21 +459,21 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
     
     std::vector<cv::Point3d> points_left;
     points_left.push_back(cv::Point3d(pupil_left));
-    points_left.push_back(cv::Point3d(pupil_left + cv::Point3d(data.gazeLeftEye)*50.0));
+    points_left.push_back(cv::Point3d(pupil_left + cv::Point3f(data.gazeLeftEye)*50.0));
     
     std::vector<cv::Point3d> points_right;
     points_right.push_back(cv::Point3d(pupil_right));
-    points_right.push_back(cv::Point3d(pupil_right + cv::Point3d(data.gazeRightEye)*50.0));
+    points_right.push_back(cv::Point3d(pupil_right + cv::Point3f(data.gazeRightEye)*50.0));
     
     // TODO: figure out why 3D gaze is not drawn
     cv::Mat_<float> proj_points;
     cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
-    FaceAnalysis::Project(proj_points, mesh_0, fx, fy, cx, cy);
+    Utilities::Project(proj_points, mesh_0, fx, fy, cx, cy);
     cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
              cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
     
     cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
-    FaceAnalysis::Project(proj_points, mesh_1, fx, fy, cx, cy);
+    Utilities::Project(proj_points, mesh_1, fx, fy, cx, cy);
     cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
              cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
 
