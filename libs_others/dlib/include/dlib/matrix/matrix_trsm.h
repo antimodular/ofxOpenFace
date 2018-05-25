@@ -10,6 +10,7 @@ namespace dlib
     namespace blas_bindings
     {
 
+        /*
         extern "C"
         {
             void cblas_strsm(const enum CBLAS_ORDER Order, const enum CBLAS_SIDE Side,
@@ -24,7 +25,7 @@ namespace dlib
                              const double alpha, const double *A, const int lda,
                              double *B, const int ldb);
         }
-
+        */
     // ------------------------------------------------------------------------------------
 
 /*  Purpose */

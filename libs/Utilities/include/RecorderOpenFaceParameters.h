@@ -40,7 +40,7 @@
 
 // Boost includes
 #include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 using namespace std;
 
