@@ -71,9 +71,13 @@ class OpenFaceDataSingleFaceTracked : public ofxCv::Follower<OpenFaceDataSingleF
 
 class ofxOpenFace : public ofThread {
     public:
+        struct CameraSettings {
+            int fx, fy, cx, cy;
+        };
+    
         ofxOpenFace();
         ~ofxOpenFace();
-        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, bool bUseHOGSVM, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
+        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eMethod, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
         void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw = false);
         void drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data);
@@ -94,7 +98,7 @@ class ofxOpenFace : public ofThread {
     
     private:
         void setupSingleFace();
-        void setupMultipleFaces(bool bUseHOGSVM);
+        void setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
         OpenFaceDataSingleFace processImageSingleFace();
         vector<OpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();
@@ -103,7 +107,7 @@ class ofxOpenFace : public ofThread {
     
         static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float>>& face_detections);
     
-        int                                             fx, fy, cx, cy;
+        CameraSettings                                  camSettings;
         int                                             nImgWidth;   // the width of the image used for tracking
         int                                             nImgHeight;  // the height of the image used for tracking
         int                                             nMaxFaces; // the maximum number of faces
