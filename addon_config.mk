@@ -13,15 +13,15 @@ common:
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
 	# specified here separated by spaces or one per line using +=
-	ADDON_INCLUDES = libs/FaceAnalyser/include
-	ADDON_INCLUDES += libs/GazeAnalyser/include
-    	ADDON_INCLUDES += libs/LandmarkDetector/include
-    	ADDON_INCLUDES += libs/Utilities/include
-    	ADDON_INCLUDES += libs/tbb/include
-    	ADDON_INCLUDES += libs/opencv3.4.1/include
+	ADDON_INCLUDES = libs_openFace/FaceAnalyser/include
+	ADDON_INCLUDES += libs_openFace/GazeAnalyser/include
+    	ADDON_INCLUDES += libs_openFace/LandmarkDetector/include
+    	ADDON_INCLUDES += libs_openFace/Utilities/include
 	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
 	ADDON_INCLUDES += libs_others/dlib/include
-    	ADDON_INCLUDES += ../libs/tbb/include
+    	ADDON_INCLUDES += libs_others/OpenBLAS/include
+    	ADDON_INCLUDES += libs_others/opencv3.4.1/include
+    	ADDON_INCLUDES += libs_others/tbb/include
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
@@ -76,29 +76,30 @@ android/armeabi-v7a:
 
 osx:
 	# Required libraries
-	ADDON_LIBS = libs/FaceAnalyser/lib/osx/libFaceAnalyser.a
-	ADDON_LIBS += libs/GazeAnalyser/lib/osx/libGazeAnalyser.a
-	ADDON_LIBS += libs/LandmarkDetector/lib/osx/libLandmarkDetector.a
-	ADDON_LIBS += libs/Utilities/lib/osx/libUtilities.a
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_calib3d.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_core.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_dnn.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_features2d.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_flann.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_highgui.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_imgcodecs.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_imgproc.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_ml.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_objdetect.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_photo.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_shape.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_stitching.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_superres.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_video.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_videoio.dylib
-	ADDON_LIBS += libs/opencv3.4.1/lib/osx/libopencv_videostab.dylib
+	ADDON_LIBS = libs_openFace/FaceAnalyser/lib/osx/libFaceAnalyser.a
+	ADDON_LIBS += libs_openFace/GazeAnalyser/lib/osx/libGazeAnalyser.a
+	ADDON_LIBS += libs_openFace/LandmarkDetector/lib/osx/libLandmarkDetector.a
+	ADDON_LIBS += libs_openFace/Utilities/lib/osx/libUtilities.a
 	ADDON_LIBS += libs_others/dlib/lib/osx/libdlib.a
-    	ADDON_LIBS += libs/tbb/lib/osx/libtbb.dylib
+	ADDON_LIBS += libs_others/OpenBLAS/lib/osx/libopenblas.a
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_calib3d.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_core.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_dnn.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_features2d.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_flann.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_highgui.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_imgcodecs.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_imgproc.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_ml.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_objdetect.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_photo.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_shape.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_stitching.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_superres.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_video.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_videoio.dylib
+	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_videostab.dylib
+    	ADDON_LIBS += libs_others/tbb/lib/osx/libtbb.dylib
 
 ios:
 	#nothing yet
