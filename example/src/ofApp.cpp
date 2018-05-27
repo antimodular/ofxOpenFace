@@ -95,27 +95,21 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofSetColor(ofColor::white);
-    ofPoint ptOffset(20, 20);
-    cv::Mat matToDraw = ofxCv::toCv(imgToProcess.getPixels());
+    imgToProcess.draw(0, 0);
     if (bDrawFaces && bOpenFaceEnabled) {
         if (settings.bDoCvTracking) {
             // draw the tracked faces
-            openFace.drawTrackedIntoMaterial(matToDraw);
+            openFace.drawTracked();
         } else {
             // draw the raw faces
             if (!settings.bMultipleFaces) {
-                openFace.drawFaceIntoMaterial(matToDraw, latestDataSingle);
+                openFace.drawFace(latestDataSingle);
             } else {
                 for (auto d : latestDataMultiple) {
-                    openFace.drawFaceIntoMaterial(matToDraw, d);
+                    openFace.drawFace(d);
                 }
             }
         }
-        ofImage imgToDraw = imgToProcess;
-        ofxCv::toOf(matToDraw, imgToDraw);
-        imgToDraw.draw(ptOffset.x, ptOffset.y);
-    } else {
-        imgToProcess.draw(ptOffset.x, ptOffset.y);
     }
     
     // Draw the FPS

@@ -84,10 +84,10 @@ class ofxOpenFace : public ofThread {
         ~ofxOpenFace();
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eMethod, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
-        void drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw = false);
-        void drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data);
-        void drawTrackedIntoMaterial(cv::Mat& mat);
-        // void drawDebug(); // put existing code here
+        void drawTracked();
+        void drawTrackedFace(OpenFaceDataSingleFaceTracked data);
+        void drawFace(const OpenFaceDataSingleFace& data, bool bForceDraw = false);
+
         void exit();
         void stop();
         void resetFaceModel();
@@ -108,7 +108,7 @@ class ofxOpenFace : public ofThread {
         vector<OpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();
         void setFPS(float value);
-        void drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data);
+        void drawGazes(const OpenFaceDataSingleFace& data);
     
         static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float>>& face_detections);
     

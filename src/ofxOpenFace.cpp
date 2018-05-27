@@ -355,75 +355,94 @@ void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& 
     }
 }
 
-// Draw the face data in the referenced material
-void ofxOpenFace::drawFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFace& data, bool bForceDraw) {
+void ofxOpenFace::drawTracked() {
+    vector<OpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
+    for (auto &f : followed) {
+        // Draw the face
+        drawTrackedFace(f);
+    }
+}
+
+void ofxOpenFace::drawTrackedFace(OpenFaceDataSingleFaceTracked data) {
+    drawFace((const OpenFaceDataSingleFace&)data, true);
+    
+    if (data.allLandmarks2D.size() > 0) {
+        // Draw label and age
+        string s = "Label: " + ofToString(data.getLabel()) + " / Age: " + ofToString(data.getAgeSeconds()) + "s";
+        // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
+        cv::Point cvPt = data.allLandmarks2D.at(8);
+        ofPoint ptChin(cvPt.x, cvPt.y);
+        // Draw string
+        ofDrawBitmapString(s, ptChin);
+    }
+}
+
+// Draw the face data
+void ofxOpenFace::drawFace(const OpenFaceDataSingleFace& data, bool bForceDraw) {
     if (!data.detected && !bForceDraw) {
         // Do not draw if no face is detected and draw is not forced
         return;
     }
     
     ofNoFill();
+    int nRadius = 2;
+    int nThickness = 3;
     
     // Draw the pose
     auto vis_certainty = data.certainty;
     auto color = cv::Scalar(vis_certainty*255.0, 0, (1 - vis_certainty) * 255);
-    Utilities::DrawBox(mat, data.pose, color, 3, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
+    auto lines = Utilities::CalculateBox(data.pose, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
+    ofSetLineWidth(nThickness);
+    for (size_t i = 0; i < lines.size(); ++i)
+    {
+        ofPoint pt1 = ofxCv::toOf(lines.at(i).first);
+        ofPoint pt2 = ofxCv::toOf(lines.at(i).second);
+        ofDrawLine(pt1, pt2);
+    }
     
     // Draw all landmarks in 2D
-    int nRadius = 2;
-    int nThickness = 1;
-    color = ofxCv::toCv(ofColor::yellow);
+    ofSetColor(ofColor::yellow);
     for (auto pt : data.allLandmarks2D) {
-        cv::circle(mat, cv::Point(pt.x, pt.y), 2, color);
+        ofDrawCircle(pt.x, pt.y, nRadius);
     }
     
     // Draw all eye landmarks in 2D
-    color = ofxCv::toCv(ofColor::blue);
+    ofSetColor(ofColor::blue);
     for (auto pt : data.eyeLandmarks2D) {
-        cv::circle(mat, cv::Point(pt.x, pt.y), 2, color);
+        ofDrawCircle(pt.x, pt.y, nRadius);
     }
     
     // Draw the gazes
     if (data.detected) {
-        drawGazes(mat, data);
+        drawGazes(data);
     }
     
     if (data.allLandmarks2D.size() > 0) {
         // Draw the bounding box
         ofRectangle r = ofxCv::toOf(data.rBoundingBox);
-        cv::rectangle(mat, cv::Point(r.getTopLeft().x, r.getTopLeft().y),
-                      cv::Point(r.getBottomRight().x, r.getBottomRight().y), ofxCv::toCv(ofColor::deepPink));
+        ofSetColor(ofColor::deepPink);
+        ofDrawRectangle(r);
         
         // Draw extra information: ID, certainty
         string s = "ID: " + data.sFaceID + " / " + ofToString(100.0f * data.certainty, 0) + "%";
         // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
-        cv::Point ptNoseTip = data.allLandmarks2D.at(33);
-        cv::putText(mat, s, ptNoseTip, 0, 1.0, ofxCv::toCv(ofColor::yellowGreen), 3);
+        cv::Point cvPt = data.allLandmarks2D.at(33);
+        
+        ofSetColor(ofColor::yellowGreen);
+        ofPoint ptNoseTip(cvPt.x, cvPt.y);
+        // Draw string
+        ofDrawBitmapString(s, ptNoseTip);
     }
 }
 
-// Draw the face data in the referenced material
-void ofxOpenFace::drawTrackedFaceIntoMaterial(cv::Mat& mat, const OpenFaceDataSingleFaceTracked& data) {
-    drawFaceIntoMaterial(mat, (const OpenFaceDataSingleFace&)data, true);
+void ofxOpenFace::drawGazes(const OpenFaceDataSingleFace& data) {
+    // A rough heuristic for drawn point size
+    ofSetLineWidth(1);
     
-    if (data.allLandmarks2D.size() > 0) {
-        // Draw label and age
-        string s = "Label: " + ofToString(data.getLabel()) + " / Age: " + ofToString(data.getAgeSeconds()) + "s";
-        // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
-        cv::Point ptChin = data.allLandmarks2D.at(8);
-        cv::putText(mat, s, ptChin, 0, 1.0, ofxCv::toCv(ofColor::darkGreen), 3);
-    }
-}
-
-void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
     // First draw the eye region landmarks
     for (size_t i = 0; i < data.eyeLandmarks2D.size(); ++i)
     {
         cv::Point featurePoint(cvRound(data.eyeLandmarks2D[i].x * (double)draw_multiplier), cvRound(data.eyeLandmarks2D[i].y * (double)draw_multiplier));
-        
-        // A rough heuristic for drawn point size
-        int thickness = 1;
-        int thickness_2 = 1;
         
         size_t next_point = i + 1;
         if (i == 7)
@@ -441,14 +460,19 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
             next_point = 20 + 28;
         
         cv::Point nextFeaturePoint(cvRound(data.eyeLandmarks2D[next_point].x * (double)draw_multiplier), cvRound(data.eyeLandmarks2D[next_point].y * (double)draw_multiplier));
+        
+        ofPoint pt1 = ofxCv::toOf(featurePoint);
+        ofPoint pt2 = ofxCv::toOf(nextFeaturePoint);
+        
         if ((i < 28 && (i < 8 || i > 19)) || (i >= 28 && (i < 8 + 28 || i > 19 + 28))) {
             // pupil
-            cv::line(mat, featurePoint, nextFeaturePoint, ofxCv::toCv(ofColor::mediumPurple), thickness_2, CV_AA, draw_shiftbits);
+            ofSetColor(ofColor::mediumPurple);
+            ofDrawLine(pt1, pt2);
         } else {
             // eye outlay
-            cv::line(mat, featurePoint, nextFeaturePoint, ofxCv::toCv(ofColor::white), thickness_2, CV_AA, draw_shiftbits);
+            ofSetColor(ofColor::white);
+            ofDrawLine(pt1, pt2);
         }
-        
     }
     
     // Now draw the gaze lines themselves
@@ -477,23 +501,22 @@ void ofxOpenFace::drawGazes(cv::Mat& mat, const OpenFaceDataSingleFace& data) {
     cv::Mat_<float> proj_points;
     cv::Mat_<float> mesh_0 = (cv::Mat_<float>(2, 3) << points_left[0].x, points_left[0].y, points_left[0].z, points_left[1].x, points_left[1].y, points_left[1].z);
     Utilities::Project(proj_points, mesh_0, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
-    cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
+    
+    ofSetColor(ofColor::aquamarine);
+    cv::Point2d cvPt1(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier));
+    cv::Point2d cvPt2(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier));
+    ofPoint pt1 = ofxCv::toOf(cvPt1);
+    ofPoint pt2 = ofxCv::toOf(cvPt2);
+    ofSetLineWidth(2);
+    
+    ofDrawLine(pt1, pt2);
     
     cv::Mat_<float> mesh_1 = (cv::Mat_<float>(2, 3) << points_right[0].x, points_right[0].y, points_right[0].z, points_right[1].x, points_right[1].y, points_right[1].z);
     Utilities::Project(proj_points, mesh_1, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
-    cv::line(mat, cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier)),
-             cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier)), cv::Scalar(110, 220, 0), 2, CV_AA, draw_shiftbits);
-
-}
-
-// Draw all tracked faces in one function
-void ofxOpenFace::drawTrackedIntoMaterial(cv::Mat& mat) {
-    vector<OpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
-    for (auto &f : followed) {
-        // Draw the face
-        drawTrackedFaceIntoMaterial(mat, f);
-    }
+    
+    cvPt1 = cv::Point(cvRound(proj_points.at<double>(0, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(0, 1) * (double)draw_multiplier));
+    cvPt2 = cv::Point(cvRound(proj_points.at<double>(1, 0) * (double)draw_multiplier), cvRound(proj_points.at<double>(1, 1) * (double)draw_multiplier));
+    ofDrawLine(pt1, pt2);
 }
 
 // Copy all data from the child class.
