@@ -13,6 +13,17 @@ void ofApp::setup(){
     }
     loadSettings();
     
+    // Look for the cen_ files in model/patch_experts. They have to be downloaded separately.
+    // See the addon GUI at https://github.com/antimodular/ofxOpenFace/wiki.
+    ofDirectory dir("model/patch_experts");
+    dir.allowExt("mat");
+    dir.allowExt("pat");
+    dir.listDir();
+    if (dir.size() == 0) {
+        ofLogError("ofApp", "The patch expert files were not found. See the Wiki instructions. Exiting app.");
+        std::exit(1);
+    }
+    
     // Initialize the grabber
     vidGrabber.setDeviceID(settings.nCameraIndex);
     vidGrabber.setDesiredFrameRate(settings.nCameraFrameRate);
