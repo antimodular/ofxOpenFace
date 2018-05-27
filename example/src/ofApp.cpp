@@ -17,7 +17,7 @@ void ofApp::setup(){
     // See the addon GUI at https://github.com/antimodular/ofxOpenFace/wiki.
     ofDirectory dir("model/patch_experts");
     dir.allowExt("mat");
-    dir.allowExt("pat");
+    dir.allowExt("dat");
     dir.listDir();
     if (dir.size() == 0) {
         ofLogError("ofApp", "The patch expert files were not found. See the Wiki instructions. Exiting app.");

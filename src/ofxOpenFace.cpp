@@ -37,18 +37,18 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, Landm
 }
 
 void ofxOpenFace::setupSingleFace() {
-    ofFile fModelCLNF = ofFile("model/main_ceclm_general.txt");
-    face_model = LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
+    ofFile fModelCLNF = ofFile(OFX_OPENFACE_MODEL);
+    pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     
-    if (!face_model.eye_model) {
+    if (!pFace_model->eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
     }
 }
 
 void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod) {
-    ofFile fModelCLNF = ofFile("model/main_ceclm_general.txt");
-    ofFile fDetectorHAAR = ofFile("classifiers/haarcascade_frontalface_alt.xml");
-    ofFile fDetectorMTCNN = ofFile("model/mtcnn_detector/MTCNN_detector.txt");
+    ofFile fModelCLNF = ofFile(OFX_OPENFACE_MODEL);
+    ofFile fDetectorHAAR = ofFile(OFX_OPENFACE_DETECTOR_HAAR);
+    ofFile fDetectorMTCNN = ofFile(OFX_OPENFACE_DETECTOR_MTCNN);
     
     if (!fModelCLNF.exists()) {
         ofLogError("ofxOpenFace", "CLNF model doesn't exist at '" + fModelCLNF.getAbsolutePath() + "'");
@@ -85,33 +85,33 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
 #endif
     
     // The modules that are being used for tracking
-    face_model = LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath()); // the model is always this
+    pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath()); // the model is always this
     if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
         // Nothing more
     } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR) {
-        face_model.face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
-        face_model.haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
+        pFace_model->face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
+        pFace_model->haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
     } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR) {
-        face_model.face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
-        face_model.mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
+        pFace_model->face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
+        pFace_model->mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
     } else {
         ofLogError("ofxOpenFace", "Unexpected value of detector method '" + ofToString((int)eMethod) + "'");
     }
     
-    if (!face_model.loaded_successfully) {
+    if (!pFace_model->loaded_successfully) {
         ofLogError("ofxOpenFace", "The face model was not loaded successfully.");
     }
     
-    if (!face_model.eye_model) {
+    if (!pFace_model->eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
     }
     
     vFace_models.reserve(nMaxFaces);
-    vFace_models.push_back(face_model);
+    vFace_models.push_back(*pFace_model);
     vActiveModels.push_back(false);
     
     for (int i=1; i < nMaxFaces; i++) {
-        vFace_models.push_back(face_model);
+        vFace_models.push_back(*pFace_model);
         vActiveModels.push_back(false);
         vDet_parameters.push_back(dp);
     }
@@ -126,21 +126,21 @@ OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     
     // The actual facial landmark detection / tracking
     OpenFaceDataSingleFace faceData;
-    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(rgb_image, face_model, det_parameters, grayscale_image);
+    faceData.detected = LandmarkDetector::DetectLandmarksInVideo(rgb_image, *pFace_model, det_parameters, grayscale_image);
      
     // If tracking succeeded and we have an eye model, estimate gaze
-    if (faceData.detected && face_model.eye_model)
+    if (faceData.detected && pFace_model->eye_model)
     {
-        GazeAnalysis::EstimateGaze(face_model, faceData.gazeLeftEye, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy, true);
-        GazeAnalysis::EstimateGaze(face_model, faceData.gazeRightEye, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy, false);
+        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeLeftEye, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy, true);
+        GazeAnalysis::EstimateGaze(*pFace_model, faceData.gazeRightEye, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy, false);
     }
-    faceData.certainty = face_model.detection_certainty;
+    faceData.certainty = pFace_model->detection_certainty;
 
     // Work out the pose of the head from the tracked model
-    faceData.pose = LandmarkDetector::GetPose(face_model, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
-    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(face_model);
-    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(face_model, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
-    faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(face_model);
+    faceData.pose = LandmarkDetector::GetPose(*pFace_model, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
+    faceData.eyeLandmarks2D = LandmarkDetector::CalculateAllEyeLandmarks(*pFace_model);
+    faceData.eyeLandmarks3D = LandmarkDetector::Calculate3DEyeLandmarks(*pFace_model, camSettings.fx, camSettings.fy, camSettings.cx, camSettings.cy);
+    faceData.allLandmarks2D = LandmarkDetector::CalculateAllLandmarks(*pFace_model);
     faceData.sFaceID = ofToString(1);
     
     // Figure out the bounding box of all landmarks
@@ -294,7 +294,7 @@ void ofxOpenFace::resetFaceModel() {
             vActiveModels[i] = false;
         }
     } else {
-        face_model.Reset();
+        pFace_model->Reset();
     }
 }
 

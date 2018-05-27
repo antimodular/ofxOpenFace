@@ -36,7 +36,10 @@ namespace ofxCv {
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-//#define DO_FACE_ANALYSIS 1
+//#define DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
+#define OFX_OPENFACE_MODEL "model/main_ceclm_general.txt"
+#define OFX_OPENFACE_DETECTOR_HAAR "classifiers/haarcascade_frontalface_alt.xml"
+#define OFX_OPENFACE_DETECTOR_MTCNN "model/mtcnn_detector/MTCNN_detector.txt"
 
 #pragma once
 
@@ -120,7 +123,7 @@ class ofxOpenFace : public ofThread {
         FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
 #endif
         vector<LandmarkDetector::CLNF>                  vFace_models;
-        LandmarkDetector::CLNF                          face_model;
+        LandmarkDetector::CLNF*                         pFace_model;
         vector<bool>                                    vActiveModels;
         LandmarkDetector::FaceModelParameters           det_parameters;
         vector<LandmarkDetector::FaceModelParameters>   vDet_parameters;
