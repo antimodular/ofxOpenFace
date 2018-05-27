@@ -36,6 +36,8 @@ namespace ofxCv {
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+//#define DO_FACE_ANALYSIS 1
+
 #pragma once
 
 // A class for storing the raw data from OpenFace for a single face
@@ -113,8 +115,10 @@ class ofxOpenFace : public ofThread {
         int                                             nMaxFaces; // the maximum number of faces
         int                                             nFrameCount; // count the frames being tracked
     
+#ifdef DO_FACE_ANALYSIS
         FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
         FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
+#endif
         vector<LandmarkDetector::CLNF>                  vFace_models;
         LandmarkDetector::CLNF                          face_model;
         vector<bool>                                    vActiveModels;

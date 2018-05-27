@@ -37,8 +37,8 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, Landm
 }
 
 void ofxOpenFace::setupSingleFace() {
-    string modelLocationCLNF = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
-    face_model = LandmarkDetector::CLNF(modelLocationCLNF);
+    ofFile fModelCLNF = ofFile("model/main_ceclm_general.txt");
+    face_model = LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     
     if (!face_model.eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
@@ -46,9 +46,19 @@ void ofxOpenFace::setupSingleFace() {
 }
 
 void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod) {
-    string modelLocationCLNF = ofFilePath::getAbsolutePath("model/main_clnf_general.txt");
-    string detectorLocationHAAR = ofFilePath::getAbsolutePath("classifiers/haarcascade_frontalface_alt.xml");
-    string detectorLocationMTCNN = ofFilePath::getAbsolutePath("model/mtcnn_detector/MTCNN_detector.txt");
+    ofFile fModelCLNF = ofFile("model/main_ceclm_general.txt");
+    ofFile fDetectorHAAR = ofFile("classifiers/haarcascade_frontalface_alt.xml");
+    ofFile fDetectorMTCNN = ofFile("model/mtcnn_detector/MTCNN_detector.txt");
+    
+    if (!fModelCLNF.exists()) {
+        ofLogError("ofxOpenFace", "CLNF model doesn't exist at '" + fModelCLNF.getAbsolutePath() + "'");
+    }
+    if (!fDetectorHAAR.exists()) {
+        ofLogError("ofxOpenFace", "HAAR detector doesn't exist at '" + fDetectorHAAR.getAbsolutePath() + "'");
+    }
+    if (!fDetectorMTCNN.exists()) {
+        ofLogError("ofxOpenFace", "MTCNN detector doesn't exist at '" + fDetectorMTCNN.getAbsolutePath() + "'");
+    }
     
     // Set up OpenFace
     auto dp = LandmarkDetector::FaceModelParameters();
@@ -58,11 +68,11 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
     }
     vDet_parameters.push_back(dp);
     
+#ifdef DO_FACE_ANALYSIS
     // The face analysis logic
     string rootDir = ofFilePath::getAbsolutePath("");
     ofLogNotice("ofxOpenFace", "Face analysis root dir: '" + rootDir + "'");
     pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters(rootDir);
-    //pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters();
     pFace_analysis_params->OptimizeForImages();
     pFace_analyser = new FaceAnalysis::FaceAnalyser(*pFace_analysis_params);
     
@@ -72,18 +82,28 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
     {
         ofLogWarning("ofxOpenFace", "No Action Unit models found.");
     }
+#endif
     
     // The modules that are being used for tracking
+    face_model = LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath()); // the model is always this
     if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
-        face_model = LandmarkDetector::CLNF(modelLocationCLNF);
+        // Nothing more
     } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR) {
-        face_model.face_detector_HAAR.load(detectorLocationHAAR);
-        face_model.haar_face_detector_location = detectorLocationHAAR;
+        face_model.face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
+        face_model.haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
     } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR) {
-        face_model.face_detector_MTCNN.Read(detectorLocationMTCNN);
-        face_model.mtcnn_face_detector_location = detectorLocationMTCNN;
+        face_model.face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
+        face_model.mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
     } else {
         ofLogError("ofxOpenFace", "Unexpected value of detector method '" + ofToString((int)eMethod) + "'");
+    }
+    
+    if (!face_model.loaded_successfully) {
+        ofLogError("ofxOpenFace", "The face model was not loaded successfully.");
+    }
+    
+    if (!face_model.eye_model) {
+        ofLogError("ofxOpenFace", "No eye model found.");
     }
     
     vFace_models.reserve(nMaxFaces);
@@ -94,10 +114,6 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
         vFace_models.push_back(face_model);
         vActiveModels.push_back(false);
         vDet_parameters.push_back(dp);
-    }
-    
-    if (!face_model.eye_model) {
-        ofLogError("ofxOpenFace", "No eye model found.");
     }
 }
 
