@@ -46,18 +46,18 @@ class ofApp : public ofBaseApp{
         void updateGUI();
         void loadSettings();
         void saveSettings();
-        void onFaceDataSingleRaw(OpenFaceDataSingleFace& data);
-        void onFaceDataMultipleRaw(vector<OpenFaceDataSingleFace>& data);
-        void onFaceDataSingleTracked(OpenFaceDataSingleFaceTracked& data);
-        void onFaceDataMultipleTracked(vector<OpenFaceDataSingleFaceTracked>& data);
+        void onFaceDataSingleRaw(ofxOpenFaceDataSingleFace& data);
+        void onFaceDataMultipleRaw(vector<ofxOpenFaceDataSingleFace>& data);
+        void onFaceDataSingleTracked(ofxOpenFaceDataSingleFaceTracked& data);
+        void onFaceDataMultipleTracked(vector<ofxOpenFaceDataSingleFaceTracked>& data);
     
         ofVideoGrabber                          vidGrabber;
         ofImage                                 imgToProcess;
         ofxOpenFace                             openFace;
-        OpenFaceDataSingleFace                  latestDataSingle;
-        vector<OpenFaceDataSingleFace>          latestDataMultiple;
-        OpenFaceDataSingleFaceTracked           latestDataSingleTracked;
-        vector<OpenFaceDataSingleFaceTracked>   latestDataMultipleTracked;
+        ofxOpenFaceDataSingleFace                  latestDataSingle;
+        vector<ofxOpenFaceDataSingleFace>          latestDataMultiple;
+        ofxOpenFaceDataSingleFaceTracked           latestDataSingleTracked;
+        vector<ofxOpenFaceDataSingleFaceTracked>   latestDataMultipleTracked;
         ofMutex                                 mutexFaceData;
     
         // For the single face GUI

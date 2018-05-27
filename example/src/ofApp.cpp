@@ -236,25 +236,25 @@ void ofApp::saveSettings() {
     s.saveFile("settings.xml"); //puts settings.xml file in the bin/data folder
 }
 
-void ofApp::onFaceDataSingleRaw(OpenFaceDataSingleFace& data) {
+void ofApp::onFaceDataSingleRaw(ofxOpenFaceDataSingleFace& data) {
     mutexFaceData.lock();
     latestDataSingle = data;
     mutexFaceData.unlock();
 }
 
-void ofApp::onFaceDataMultipleRaw(vector<OpenFaceDataSingleFace>& data) {
+void ofApp::onFaceDataMultipleRaw(vector<ofxOpenFaceDataSingleFace>& data) {
     mutexFaceData.lock();
     latestDataMultiple = data;
     mutexFaceData.unlock();
 }
 
-void ofApp::onFaceDataSingleTracked(OpenFaceDataSingleFaceTracked &data) {
+void ofApp::onFaceDataSingleTracked(ofxOpenFaceDataSingleFaceTracked &data) {
     mutexFaceData.lock();
     latestDataSingleTracked = data;
     mutexFaceData.unlock();
 }
 
-void ofApp::onFaceDataMultipleTracked(vector<OpenFaceDataSingleFaceTracked> &data) {
+void ofApp::onFaceDataMultipleTracked(vector<ofxOpenFaceDataSingleFaceTracked> &data) {
     mutexFaceData.lock();
     latestDataMultipleTracked = data;
     mutexFaceData.unlock();

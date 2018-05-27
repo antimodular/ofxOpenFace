@@ -1,10 +1,10 @@
 #include "ofxOpenFace.h"
 #include <Face_utils.h>
 
-ofEvent<OpenFaceDataSingleFace> ofxOpenFace::eventOpenFaceDataSingleRaw = ofEvent<OpenFaceDataSingleFace>();
-ofEvent<vector<OpenFaceDataSingleFace>> ofxOpenFace::eventOpenFaceDataMultipleRaw = ofEvent<vector<OpenFaceDataSingleFace>>();
-ofEvent<OpenFaceDataSingleFaceTracked> ofxOpenFace::eventOpenFaceDataSingleTracked = ofEvent<OpenFaceDataSingleFaceTracked>();
-ofEvent<vector<OpenFaceDataSingleFaceTracked>> ofxOpenFace::eventOpenFaceDataMultipleTracked = ofEvent<vector<OpenFaceDataSingleFaceTracked>>();
+ofEvent<ofxOpenFaceDataSingleFace> ofxOpenFace::eventOpenFaceDataSingleRaw = ofEvent<ofxOpenFaceDataSingleFace>();
+ofEvent<vector<ofxOpenFaceDataSingleFace>> ofxOpenFace::eventOpenFaceDataMultipleRaw = ofEvent<vector<ofxOpenFaceDataSingleFace>>();
+ofEvent<ofxOpenFaceDataSingleFaceTracked> ofxOpenFace::eventOpenFaceDataSingleTracked = ofEvent<ofxOpenFaceDataSingleFaceTracked>();
+ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>> ofxOpenFace::eventOpenFaceDataMultipleTracked = ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>>();
 
 // Constructor
 ofxOpenFace::ofxOpenFace(){
@@ -110,7 +110,7 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
     }
 }
 
-OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
+ofxOpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     // Reading the images
     mutexImage.lock();
     cv::Mat rgb_image = matToProcessColor;
@@ -118,7 +118,7 @@ OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     mutexImage.unlock();
     
     // The actual facial landmark detection / tracking
-    OpenFaceDataSingleFace faceData;
+    ofxOpenFaceDataSingleFace faceData;
     faceData.detected = LandmarkDetector::DetectLandmarksInVideo(rgb_image, *pFace_model, det_parameters, grayscale_image);
      
     // If tracking succeeded and we have an eye model, estimate gaze
@@ -149,7 +149,7 @@ OpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     return faceData;
 }
 
-vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
+vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
     mutexImage.lock();
     cv::Mat rgb_image = matToProcessColor;
@@ -182,10 +182,10 @@ vector<OpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     
     vector<tbb::atomic<bool>> face_detections_used(face_detections.size());
     
-    vector<OpenFaceDataSingleFace> vData; // the data we will send
+    vector<ofxOpenFaceDataSingleFace> vData; // the data we will send
     // Initialize it
     for (int i=0; i<nMaxFaces; i++) {
-        OpenFaceDataSingleFace d;
+        ofxOpenFaceDataSingleFace d;
         vData.push_back(d);
     }
     
@@ -312,7 +312,7 @@ void ofxOpenFace::threadedFunction() {
             } else {
                 auto d = processImageSingleFace();
                 // Update the tracker
-                std::vector<OpenFaceDataSingleFace> v;
+                std::vector<ofxOpenFaceDataSingleFace> v;
                 v.push_back(d);
                 tracker.track(v);
                 // Raise the event for the updated faces
@@ -356,15 +356,15 @@ void ofxOpenFace::NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& 
 }
 
 void ofxOpenFace::drawTracked() {
-    vector<OpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
+    vector<ofxOpenFaceDataSingleFaceTracked> followed = tracker.getFollowers();
     for (auto &f : followed) {
         // Draw the face
         drawTrackedFace(f);
     }
 }
 
-void ofxOpenFace::drawTrackedFace(OpenFaceDataSingleFaceTracked data) {
-    drawFace((const OpenFaceDataSingleFace&)data, true);
+void ofxOpenFace::drawTrackedFace(ofxOpenFaceDataSingleFaceTracked data) {
+    drawFace((const ofxOpenFaceDataSingleFace&)data, true);
     
     if (data.allLandmarks2D.size() > 0) {
         // Draw label and age
@@ -378,7 +378,7 @@ void ofxOpenFace::drawTrackedFace(OpenFaceDataSingleFaceTracked data) {
 }
 
 // Draw the face data
-void ofxOpenFace::drawFace(const OpenFaceDataSingleFace& data, bool bForceDraw) {
+void ofxOpenFace::drawFace(const ofxOpenFaceDataSingleFace& data, bool bForceDraw) {
     if (!data.detected && !bForceDraw) {
         // Do not draw if no face is detected and draw is not forced
         return;
@@ -435,7 +435,7 @@ void ofxOpenFace::drawFace(const OpenFaceDataSingleFace& data, bool bForceDraw) 
     }
 }
 
-void ofxOpenFace::drawGazes(const OpenFaceDataSingleFace& data) {
+void ofxOpenFace::drawGazes(const ofxOpenFaceDataSingleFace& data) {
     // A rough heuristic for drawn point size
     ofSetLineWidth(1);
     
@@ -519,40 +519,8 @@ void ofxOpenFace::drawGazes(const OpenFaceDataSingleFace& data) {
     ofDrawLine(pt1, pt2);
 }
 
-// Copy all data from the child class.
-OpenFaceDataSingleFaceTracked::OpenFaceDataSingleFaceTracked(const OpenFaceDataSingleFace& d) {
-    this->detected = d.detected;
-    this->gazeLeftEye = d.gazeLeftEye;
-    this->gazeRightEye = d.gazeRightEye;
-    this->pose = d.pose;
-    this->allLandmarks2D = d.allLandmarks2D;
-    this->eyeLandmarks2D = d.eyeLandmarks2D;
-    this->eyeLandmarks3D = d.eyeLandmarks3D;
-    this->certainty = d.certainty;
-    this->rBoundingBox = d.rBoundingBox;
-    this->sFaceID = d.sFaceID;
-}
-
-// Tracker classes
-void OpenFaceDataSingleFaceTracked::setup(const OpenFaceDataSingleFace& track) {
-    *this = OpenFaceDataSingleFaceTracked(track);
-    nTimeAppearedMs = ofGetElapsedTimeMillis();
-}
-
-void OpenFaceDataSingleFaceTracked::update(const OpenFaceDataSingleFace& track) {
-    *this = OpenFaceDataSingleFaceTracked(track);
-}
-
-void OpenFaceDataSingleFaceTracked::kill() {
-    dead = true;
-}
-
-int OpenFaceDataSingleFaceTracked::getAgeSeconds() const {
-    return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000;
-}
-
 // Return the tracking distance between two objects
-float ofxCv::trackingDistance(const OpenFaceDataSingleFaceTracked& a, const OpenFaceDataSingleFaceTracked& b) {
+float ofxCv::trackingDistance(const ofxOpenFaceDataSingleFaceTracked& a, const ofxOpenFaceDataSingleFaceTracked& b) {
     // For now, use the tracking distance of the bounding boxes
     return ofxCv::trackingDistance(a.rBoundingBox, b.rBoundingBox);
 }

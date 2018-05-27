@@ -7,9 +7,9 @@
 */
 
 // Forward declaration, otherwise we get a compilation error
-class OpenFaceDataSingleFaceTracked;
+class ofxOpenFaceDataSingleFaceTracked;
 namespace ofxCv {
-    float trackingDistance(const OpenFaceDataSingleFaceTracked& a, const OpenFaceDataSingleFaceTracked& b);
+    float trackingDistance(const ofxOpenFaceDataSingleFaceTracked& a, const ofxOpenFaceDataSingleFaceTracked& b);
 }
 
 #include "ofMain.h"
@@ -36,43 +36,17 @@ namespace ofxCv {
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// ofxOpenFace addon
+#include "ofxOpenFaceDataSingleFace.h"
+#include "ofxOpenFaceDataSingleFaceTracked.h"
+
+// Some useful preprocessor definitions
 //#define DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
 #define OFX_OPENFACE_MODEL "model/main_ceclm_general.txt"
 #define OFX_OPENFACE_DETECTOR_HAAR "classifiers/haarcascade_frontalface_alt.xml"
 #define OFX_OPENFACE_DETECTOR_MTCNN "model/mtcnn_detector/MTCNN_detector.txt"
 
 #pragma once
-
-// A class for storing the raw data from OpenFace for a single face
-class OpenFaceDataSingleFace {
-public:
-    bool                    detected = false;
-    cv::Point3f             gazeLeftEye;
-    cv::Point3f             gazeRightEye;
-    cv::Vec6d               pose;
-    vector<cv::Point2f>     allLandmarks2D;
-    vector<cv::Point2f>     eyeLandmarks2D;
-    vector<cv::Point3f>     eyeLandmarks3D;
-    double                  certainty = 0.0f;
-    cv::Rect                rBoundingBox;
-    string                  sFaceID = "";
-    
-    //void draw();
-};
-
-// A class for sharing tracked data for a single face
-class OpenFaceDataSingleFaceTracked : public ofxCv::Follower<OpenFaceDataSingleFace>, public OpenFaceDataSingleFace {
-    public:
-        OpenFaceDataSingleFaceTracked() {};
-        OpenFaceDataSingleFaceTracked(const OpenFaceDataSingleFace& d); // constructor
-        int nTimeAppearedMs = 0; // to keep track of the age
-    
-        void setup(const OpenFaceDataSingleFace& track); // called by the tracker when a new face is detected
-        void update(const OpenFaceDataSingleFace& track); // called by the tracker when an existing face is updated
-        void kill(); // called by the tracker when an existing face is lost
-        int getAgeSeconds() const;
-    // int getLastSeenMs() const; // when were you last seen?
-};
 
 class ofxOpenFace : public ofThread {
     public:
@@ -85,8 +59,8 @@ class ofxOpenFace : public ofThread {
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eMethod, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
         void drawTracked();
-        void drawTrackedFace(OpenFaceDataSingleFaceTracked data);
-        void drawFace(const OpenFaceDataSingleFace& data, bool bForceDraw = false);
+        void drawTrackedFace(ofxOpenFaceDataSingleFaceTracked data);
+        void drawFace(const ofxOpenFaceDataSingleFace& data, bool bForceDraw = false);
 
         void exit();
         void stop();
@@ -94,21 +68,21 @@ class ofxOpenFace : public ofThread {
         int getFPS();
     
         // Events for the raw OpenFace data
-        static ofEvent<OpenFaceDataSingleFace>              eventOpenFaceDataSingleRaw;
-        static ofEvent<vector<OpenFaceDataSingleFace>>      eventOpenFaceDataMultipleRaw;
+        static ofEvent<ofxOpenFaceDataSingleFace>              eventOpenFaceDataSingleRaw;
+        static ofEvent<vector<ofxOpenFaceDataSingleFace>>      eventOpenFaceDataMultipleRaw;
     
         // Events for the tracked OpenFace data
-        static ofEvent<OpenFaceDataSingleFaceTracked>              eventOpenFaceDataSingleTracked;
-        static ofEvent<vector<OpenFaceDataSingleFaceTracked>>      eventOpenFaceDataMultipleTracked;
+        static ofEvent<ofxOpenFaceDataSingleFaceTracked>              eventOpenFaceDataSingleTracked;
+        static ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>>      eventOpenFaceDataMultipleTracked;
     
     private:
         void setupSingleFace();
         void setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
-        OpenFaceDataSingleFace processImageSingleFace();
-        vector<OpenFaceDataSingleFace> processImageMultipleFaces();
+        ofxOpenFaceDataSingleFace processImageSingleFace();
+        vector<ofxOpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();
         void setFPS(float value);
-        void drawGazes(const OpenFaceDataSingleFace& data);
+        void drawGazes(const ofxOpenFaceDataSingleFace& data);
     
         static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float>>& face_detections);
     
@@ -135,7 +109,7 @@ class ofxOpenFace : public ofThread {
         Utilities::FpsTracker                           fps_tracker;
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
-        ofxCv::TrackerFollower<OpenFaceDataSingleFace, OpenFaceDataSingleFaceTracked>  tracker;
+        ofxCv::TrackerFollower<ofxOpenFaceDataSingleFace, ofxOpenFaceDataSingleFaceTracked>  tracker;
     
         const int                                       draw_shiftbits = 4;
         const int                                       draw_multiplier = 1 << 4;
