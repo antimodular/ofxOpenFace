@@ -1,0 +1,4 @@
+ofxCv
+ofxGui
+ofxOpenFace
+ofxXmlSettings
