@@ -86,17 +86,10 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
     
     // The modules that are being used for tracking
     pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath()); // the model is always this
-    if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
-        // Nothing more
-    } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR) {
-        pFace_model->face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
-        pFace_model->haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
-    } else if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR) {
-        pFace_model->face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
-        pFace_model->mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
-    } else {
-        ofLogError("ofxOpenFace", "Unexpected value of detector method '" + ofToString((int)eMethod) + "'");
-    }
+    pFace_model->face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
+    pFace_model->haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
+    pFace_model->face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
+    pFace_model->mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
     
     if (!pFace_model->loaded_successfully) {
         ofLogError("ofxOpenFace", "The face model was not loaded successfully.");

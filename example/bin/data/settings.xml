@@ -11,7 +11,7 @@
     </camera>
     <tracking>
         <doCvTracking>1</doCvTracking>
-        <multipleFaces>0</multipleFaces>
+        <multipleFaces>1</multipleFaces>
         <maxFaces>2</maxFaces>
         <method>2</method>
         <persistenceMs>30</persistenceMs>
