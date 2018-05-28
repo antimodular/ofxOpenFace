@@ -41,7 +41,7 @@ namespace ofxCv {
 #include "ofxOpenFaceDataSingleFaceTracked.h"
 
 // Some useful preprocessor definitions
-//#define DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
+//#define OFX_OPENFACE_DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
 #define OFX_OPENFACE_MODEL "model/main_ceclm_general.txt"
 #define OFX_OPENFACE_DETECTOR_HAAR "classifiers/haarcascade_frontalface_alt.xml"
 #define OFX_OPENFACE_DETECTOR_MTCNN "model/mtcnn_detector/MTCNN_detector.txt"
@@ -91,7 +91,7 @@ class ofxOpenFace : public ofThread {
         int                                             nMaxFaces; // the maximum number of faces
         int                                             nFrameCount; // count the frames being tracked
     
-#ifdef DO_FACE_ANALYSIS
+#ifdef OFX_OPENFACE_DO_FACE_ANALYSIS
         FaceAnalysis::FaceAnalyserParameters*           pFace_analysis_params = nullptr;
         FaceAnalysis::FaceAnalyser*                     pFace_analyser = nullptr;
 #endif

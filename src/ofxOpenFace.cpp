@@ -70,7 +70,7 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Face
     }
     vDet_parameters.push_back(dp);
     
-#ifdef DO_FACE_ANALYSIS
+#ifdef OFX_OPENFACE_DO_FACE_ANALYSIS
     // The face analysis logic
     string rootDir = ofFilePath::getAbsolutePath("");
     ofLogNotice("ofxOpenFace", "Face analysis root dir: '" + rootDir + "'");
