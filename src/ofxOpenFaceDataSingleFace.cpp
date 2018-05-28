@@ -37,7 +37,7 @@ void ofxOpenFaceDataSingleFace::draw() {
     }
     
     // Draw the gazes
-    if (detected) {
+    if (detected && eyeLandmarks3D.size() > 0) {
         drawGazes();
     }
     
