@@ -58,9 +58,7 @@ class ofxOpenFace : public ofThread {
         ~ofxOpenFace();
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eMethod, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
-        void drawTracked();
-        void drawTrackedFace(ofxOpenFaceDataSingleFaceTracked data);
-        void drawFace(const ofxOpenFaceDataSingleFace& data, bool bForceDraw = false);
+        vector<ofxOpenFaceDataSingleFaceTracked> getTracked();
 
         void exit();
         void stop();
@@ -75,6 +73,9 @@ class ofxOpenFace : public ofThread {
         static ofEvent<ofxOpenFaceDataSingleFaceTracked>              eventOpenFaceDataSingleTracked;
         static ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>>      eventOpenFaceDataMultipleTracked;
     
+        // Camera settings
+        static CameraSettings s_camSettings;
+    
     private:
         void setupSingleFace();
         void setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
@@ -82,11 +83,9 @@ class ofxOpenFace : public ofThread {
         vector<ofxOpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();
         void setFPS(float value);
-        void drawGazes(const ofxOpenFaceDataSingleFace& data);
     
         static void NonOverlapingDetections(const vector<LandmarkDetector::CLNF>& clnf_models, vector<cv::Rect_<float>>& face_detections);
     
-        CameraSettings                                  camSettings;
         int                                             nImgWidth;   // the width of the image used for tracking
         int                                             nImgHeight;  // the height of the image used for tracking
         int                                             nMaxFaces; // the maximum number of faces
@@ -110,7 +109,4 @@ class ofxOpenFace : public ofThread {
         cv::Mat                                         matToProcessColor; // the material to process for tracking
         cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
         ofxCv::TrackerFollower<ofxOpenFaceDataSingleFace, ofxOpenFaceDataSingleFaceTracked>  tracker;
-    
-        const int                                       draw_shiftbits = 4;
-        const int                                       draw_multiplier = 1 << 4;
 };

@@ -1,3 +1,4 @@
+#include "ofMain.h"
 #include "ofxCv.h"
 
 #pragma once
@@ -16,5 +17,6 @@ public:
     cv::Rect                rBoundingBox;
     string                  sFaceID = "";
     
-    //void draw();
+    void drawGazes();
+    void draw();
 };

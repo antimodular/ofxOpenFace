@@ -99,14 +99,20 @@ void ofApp::draw(){
     if (bDrawFaces && bOpenFaceEnabled) {
         if (settings.bDoCvTracking) {
             // draw the tracked faces
-            openFace.drawTracked();
+            if (!settings.bMultipleFaces) {
+                latestDataSingleTracked.draw();
+            } else {
+                for (auto d : latestDataMultipleTracked) {
+                    d.draw();
+                }
+            }
         } else {
             // draw the raw faces
             if (!settings.bMultipleFaces) {
-                openFace.drawFace(latestDataSingle);
+                latestDataSingle.draw();
             } else {
                 for (auto d : latestDataMultiple) {
-                    openFace.drawFace(d);
+                    d.draw();
                 }
             }
         }

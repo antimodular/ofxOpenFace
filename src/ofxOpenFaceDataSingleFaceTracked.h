@@ -14,4 +14,6 @@ public:
     void kill(); // called by the tracker when an existing face is lost
     int getAgeSeconds() const;
     // int getLastSeenMs() const; // when were you last seen?
+    
+    void draw();
 };
