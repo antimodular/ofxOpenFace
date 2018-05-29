@@ -50,7 +50,7 @@ void ofApp::setup(){
     gui.add(lblCameraDimensions.setup("Actual camera dimensions", ofToString(ptCameraDims.x) + "x" + ofToString(ptCameraDims.y)));
     gui.add(lblCameraSettings.setup("Camera settings", "fx: " + ofToString(settings.fx) + " fy: " + ofToString(settings.fy) + " cx: " + ofToString(settings.cx) + " cy: " + ofToString(settings.cy)));
     gui.add(lblCameraIndex.setup("Camera index", ofToString(settings.nCameraIndex)));
-    gui.setPosition(800, 0);
+    gui.setPosition(640, 0);
     
     if (settings.bDoCvTracking) {
         ofAddListener(ofxOpenFace::eventOpenFaceDataSingleTracked, this, &ofApp::onFaceDataSingleTracked);
@@ -212,7 +212,7 @@ void ofApp::loadSettings() {
     settings.fy = s.getValue("settings:camera:fy", 500);
     settings.cx = s.getValue("settings:camera:cx", settings.nCameraWidth/2.0f);
     settings.cy = s.getValue("settings:camera:cy", settings.nCameraHeight/2.0f);
-    settings.eDetectorFace = (LandmarkDetector::FaceModelParameters::FaceDetector)s.getValue("settings:tracking:detector:face", (int)LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR);
+    settings.eDetectorFace = (LandmarkDetector::FaceModelParameters::FaceDetector)s.getValue("settings:tracking:detector:face", (int)LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR);
     settings.eDetectorLandmarks = (LandmarkDetector::FaceModelParameters::LandmarkDetector)s.getValue("settings:tracking:detector:landmarks", (int)LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR);
 }
 
