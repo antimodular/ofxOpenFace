@@ -18,5 +18,5 @@ public:
     string                  sFaceID = "";
     
     void drawGazes();
-    void draw();
+    void draw(bool bForceDraw = false);
 };

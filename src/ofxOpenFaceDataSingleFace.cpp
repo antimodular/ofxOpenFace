@@ -2,8 +2,8 @@
 #include "ofxOpenFace.h"
 #include <VisualizationUtils.h>
 
-void ofxOpenFaceDataSingleFace::draw() {
-    if (!detected) {
+void ofxOpenFaceDataSingleFace::draw(bool bForceDraw) {
+    if (!detected && !bForceDraw) {
         // Do not draw if no face is detected and draw is not forced
         return;
     }
@@ -37,7 +37,7 @@ void ofxOpenFaceDataSingleFace::draw() {
     }
     
     // Draw the gazes
-    if (detected && eyeLandmarks3D.size() > 0) {
+    if (eyeLandmarks3D.size() > 0) {
         drawGazes();
     }
     

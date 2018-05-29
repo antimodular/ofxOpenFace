@@ -33,15 +33,13 @@ int ofxOpenFaceDataSingleFaceTracked::getAgeSeconds() const {
 }
 
 void ofxOpenFaceDataSingleFaceTracked::draw() {
-    ofxOpenFaceDataSingleFace::draw();
+    ofxOpenFaceDataSingleFace::draw(true);
     
-    if (detected > 0) {
-        // Draw label and age
-        string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds()) + "s";
-        // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
-        cv::Point cvPt = allLandmarks2D.at(8);
-        ofPoint ptChin(cvPt.x, cvPt.y);
-        // Draw string
-        ofDrawBitmapString(s, ptChin);
-    }
+    // Draw label and age
+    string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds()) + "s";
+    // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
+    cv::Point cvPt = allLandmarks2D.at(8);
+    ofPoint ptChin(cvPt.x, cvPt.y);
+    // Draw string
+    ofDrawBitmapString(s, ptChin);
 }
