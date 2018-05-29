@@ -20,8 +20,7 @@ common:
 	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
 	ADDON_INCLUDES += libs_others/dlib/include
     	ADDON_INCLUDES += libs_others/OpenBLAS/include
-    	ADDON_INCLUDES += libs_others/opencv3.4.1/include
-    	ADDON_INCLUDES += libs_others/tbb/include
+    	ADDON_INCLUDES += /usr/local/include
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
@@ -30,7 +29,7 @@ common:
 	
 	# any special flag that should be passed to the linker when using this
 	# addon, also used for system libraries with -lname
-	ADDON_LDFLAGS = 
+	#ADDON_LDFLAGS = -rpath ../../../../addons/ofxOpenFace/libs_others/opencv3.4.1/lib/osx
 	
 	# linux only, any library that should be included in the project using
 	# pkg-config
@@ -82,24 +81,25 @@ osx:
 	ADDON_LIBS += libs_openFace/Utilities/lib/osx/libUtilities.a
 	ADDON_LIBS += libs_others/dlib/lib/osx/libdlib.a
 	ADDON_LIBS += libs_others/OpenBLAS/lib/osx/libopenblas.a
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_calib3d.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_core.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_dnn.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_features2d.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_flann.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_highgui.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_imgcodecs.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_imgproc.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_ml.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_objdetect.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_photo.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_shape.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_stitching.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_superres.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_video.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_videoio.dylib
-	ADDON_LIBS += libs_others/opencv3.4.1/lib/osx/libopencv_videostab.dylib
-    	ADDON_LIBS += libs_others/tbb/lib/osx/libtbb.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_calib3d.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_core.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_dnn.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_features2d.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_flann.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_highgui.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_imgcodecs.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_imgproc.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_ml.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_objdetect.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_photo.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_shape.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_stitching.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_superres.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_video.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_videoio.dylib
+	ADDON_LIBS += /usr/local/lib/libopencv_videostab.dylib
+    	ADDON_LIBS += /usr/local/lib/libtbb.dylib
 
+	#ADDON_AFTER = echo "Not implemented yet"
 ios:
 	#nothing yet
