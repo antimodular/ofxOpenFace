@@ -84,8 +84,8 @@ class ofxOpenFace : public ofThread {
         static CameraSettings s_camSettings;
     
     private:
-        void setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector);
-        void setupMultipleFaces(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector, LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
+        void setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace);
+        void setupMultipleFaces(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace);
         ofxOpenFaceDataSingleFace processImageSingleFace();
         vector<ofxOpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();

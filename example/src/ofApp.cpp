@@ -207,7 +207,7 @@ void ofApp::loadSettings() {
     settings.bMultipleFaces = s.getValue("settings:tracking:multipleFaces", true);
     settings.nMaxFaces = s.getValue("settings:tracking:maxFaces", 4);
     settings.nTrackingPersistenceMs = s.getValue("settings:tracking:persistenceMs", 30);
-    settings.nTrackingTolerancePx = s.getValue("settings:tracking:tolerancePixels", 60);
+    settings.nTrackingTolerancePx = s.getValue("settings:tracking:tolerancePixels", 200);
     settings.fx = s.getValue("settings:camera:fx", 500);
     settings.fy = s.getValue("settings:camera:fy", 500);
     settings.cx = s.getValue("settings:camera:cx", settings.nCameraWidth/2.0f);

@@ -66,7 +66,7 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, Landm
     if (bMultipleFaces) {
         setupMultipleFaces(eDetectorLandmarks, eDetectorFace);
     } else {
-        setupSingleFace(eDetectorLandmarks);
+        setupSingleFace(eDetectorLandmarks, eDetectorFace);
     }
     
     fps_tracker.AddFrame();
@@ -76,24 +76,30 @@ void ofxOpenFace::setup(bool bTrackMultipleFaces, int nWidth, int nHeight, Landm
     tracker.setMaximumDistance(maxDistancePx); // max pixels allowed to move between frames
 }
 
-void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector) {
+void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace) {
     ofFile fModelCLM = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
     ofFile fModelCECLM = ofFile(OFX_OPENFACE_MODEL_CECLM);
     ofFile fModelCLNF = ofFile(OFX_OPENFACE_MODEL_CLNF);
     ofFile fDetectorHAAR = ofFile(OFX_OPENFACE_DETECTOR_HAAR);
     ofFile fDetectorMTCNN = ofFile(OFX_OPENFACE_DETECTOR_MTCNN);
     
-    if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
+    det_parameters.curr_face_detector = eDetectorFace;
+    det_parameters.curr_landmark_detector = eDetectorLandmarks;
+    if (eDetectorFace == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
+        det_parameters.reinit_video_every = -1;
+    }
+    
+    if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
-    } else if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
+    } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
-    } else if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
+    } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CECLM);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
     } else {
-        ofLogError("ofxOpenFace", "Unknown face model '" + ofToString((int)eDetector) + "'. Defaulting to CLNF");
+        ofLogError("ofxOpenFace", "Unknown landmark detector '" + ofToString((int)eDetectorLandmarks) + "'. Defaulting to CLNF");
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
     }
@@ -103,7 +109,7 @@ void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::Landmar
     }
 }
 
-void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector, LandmarkDetector::FaceModelParameters::FaceDetector eMethod) {
+void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace) {
     ofFile fModelCLM = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
     ofFile fModelCECLM = ofFile(OFX_OPENFACE_MODEL_CECLM);
     ofFile fModelCLNF = ofFile(OFX_OPENFACE_MODEL_CLNF);
@@ -119,9 +125,9 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Land
     
     // Set up OpenFace
     auto dp = LandmarkDetector::FaceModelParameters();
-    dp.curr_face_detector = eMethod;
-    dp.curr_landmark_detector = eDetector;
-    if (eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
+    dp.curr_face_detector = eDetectorFace;
+    dp.curr_landmark_detector = eDetectorLandmarks;
+    if (eDetectorFace == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
         dp.reinit_video_every = -1;
     }
     vDet_parameters.push_back(dp);
@@ -143,17 +149,17 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Land
 #endif
     
     // The modules that are being used for tracking
-    if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
+    if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
-    } else if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
+    } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
-    } else if (eDetector == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
+    } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CECLM);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
     } else {
-        ofLogError("ofxOpenFace", "Unknown face model '" + ofToString((int)eDetector) + "'. Defaulting to CLNF");
+        ofLogError("ofxOpenFace", "Unknown landmark detector '" + ofToString((int)eDetectorLandmarks) + "'. Defaulting to CLNF");
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
         pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
     }
