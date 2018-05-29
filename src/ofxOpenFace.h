@@ -42,6 +42,7 @@ namespace ofxCv {
 
 // Some useful preprocessor definitions
 //#define OFX_OPENFACE_DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
+#define OFX_OPENFACE_DO_PARALLEL 1 // 1 for parallel computation of different faces
 #define OFX_OPENFACE_MODEL_CECLM "model/main_ceclm_general.txt" // Trained on in the wild, menpo and multi-pie data (a CE-CLM model)
 #define OFX_OPENFACE_MODEL_CLNF "model/main_clnf_general.txt" // Trained on in the wild and multi-pie data (a CLNF model)
 #define OFX_OPENFACE_MODEL_SVRCLM "model/main_clm_general.txt" // Trained on in the wild and multi-pie data (less accurate SVR/CLM model)

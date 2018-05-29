@@ -268,8 +268,11 @@ vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     }
     
     // Go through every model and update the tracking
-    //tbb::parallel_for(0, (int)vFace_models.size(), [&](int model) {
+#ifdef OFX_OPENFACE_DO_PARALLEL
+    tbb::parallel_for(0, (int)vFace_models.size(), [&](int model) {
+#else
     for (unsigned int model = 0; model < vFace_models.size(); ++model) {
+#endif
         bool detection_success = false;
         
         // If the current model has failed more than 4 times in a row, remove it
@@ -327,8 +330,11 @@ vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
         pl.addVertices(vLandmarks2D);
         pl.close();
         vData[model].rBoundingBox = ofxCv::toCv(pl.getBoundingBox());
+#ifdef OFX_OPENFACE_DO_PARALLEL
+    });
+#else
     }
-    //});
+#endif
     
     // Update the frame count
     nFrameCount++;
@@ -378,6 +384,12 @@ void ofxOpenFace::threadedFunction() {
         if (!bHaveNewImage) {
             ofSleepMillis(20);
         } else {
+            // Wait a few seconds at startup before starting processing, to avoid a weird crash if
+            // the app starts with a detected face.
+            if (ofGetElapsedTimeMillis() < 5000) {
+                continue;
+            }
+            
             nFrameCount = 0;
             if (bMultipleFaces) {
                 auto v = processImageMultipleFaces();
