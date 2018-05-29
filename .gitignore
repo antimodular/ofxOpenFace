@@ -1,4 +1,4 @@
-
+.DS_Store
 example/bin/*.app/*
 example/bin/*.app/*
 example/bin/data/model/patch_experts/cen_*.mat

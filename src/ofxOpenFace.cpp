@@ -192,7 +192,8 @@ ofxOpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     // Reading the images
     mutexImage.lock();
     cv::Mat rgb_image = matToProcessColor;
-    cv::Mat grayscale_image = matToProcessGrayScale;
+    cv::Mat grayscale_image;
+    ofxCv::copyGray(rgb_image, grayscale_image);
     mutexImage.unlock();
     
     // The actual facial landmark detection / tracking
@@ -231,7 +232,8 @@ vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
     mutexImage.lock();
     cv::Mat rgb_image = matToProcessColor;
-    cv::Mat_<uchar> grayscale_image = matToProcessGrayScale;
+    cv::Mat grayscale_image;
+    ofxCv::copyGray(rgb_image, grayscale_image);
     mutexImage.unlock();
     
     vector<cv::Rect_<float> > face_detections;
@@ -346,8 +348,6 @@ void ofxOpenFace::setImage(ofImage img) {
     mutexImage.lock();
     // Override the current "next image"
     matToProcessColor = ofxCv::toCv(img.getPixels());
-    img.setImageType(ofImageType::OF_IMAGE_GRAYSCALE);
-    matToProcessGrayScale = ofxCv::toCv(img.getPixels());
     bHaveNewImage = true;
     mutexImage.unlock();
 }
@@ -383,13 +383,7 @@ void ofxOpenFace::threadedFunction() {
         // Do we have an image to process?
         if (!bHaveNewImage) {
             ofSleepMillis(20);
-        } else {
-            // Wait a few seconds at startup before starting processing, to avoid a weird crash if
-            // the app starts with a detected face.
-            if (ofGetElapsedTimeMillis() < 5000) {
-                continue;
-            }
-            
+        } else {            
             nFrameCount = 0;
             if (bMultipleFaces) {
                 auto v = processImageMultipleFaces();

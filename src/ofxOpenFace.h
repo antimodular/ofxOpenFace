@@ -115,6 +115,5 @@ class ofxOpenFace : public ofThread {
         bool                                            bHaveNewImage = false; // there is a new image available
         Utilities::FpsTracker                           fps_tracker;
         cv::Mat                                         matToProcessColor; // the material to process for tracking
-        cv::Mat                                         matToProcessGrayScale; // the material to process for tracking
         ofxCv::TrackerFollower<ofxOpenFaceDataSingleFace, ofxOpenFaceDataSingleFaceTracked>  tracker;
 };
