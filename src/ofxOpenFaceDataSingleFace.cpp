@@ -14,9 +14,11 @@ void ofxOpenFaceDataSingleFace::draw(bool bForceDraw) {
     
     // Draw the pose
     auto vis_certainty = certainty;
-    auto color = cv::Scalar(vis_certainty*255.0, 0, (1 - vis_certainty) * 255);
+    //auto color = cv::Scalar(vis_certainty*255.0, 0, (1 - vis_certainty) * 255);
     auto lines = Utilities::CalculateBox(pose, ofxOpenFace::s_camSettings.fx, ofxOpenFace::s_camSettings.fy, ofxOpenFace::s_camSettings.cx, ofxOpenFace::s_camSettings.cy);
     ofSetLineWidth(nThickness);
+    ofColor colorBox(vis_certainty*255.0, 0, (1 - vis_certainty) * 255);
+    ofSetColor(colorBox);
     for (size_t i = 0; i < lines.size(); ++i)
     {
         ofPoint pt1 = ofxCv::toOf(lines.at(i).first);

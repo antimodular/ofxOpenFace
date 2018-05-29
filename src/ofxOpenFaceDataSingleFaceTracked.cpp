@@ -18,6 +18,7 @@ ofxOpenFaceDataSingleFaceTracked::ofxOpenFaceDataSingleFaceTracked(const ofxOpen
 void ofxOpenFaceDataSingleFaceTracked::setup(const ofxOpenFaceDataSingleFace& track) {
     *this = ofxOpenFaceDataSingleFaceTracked(track);
     nTimeAppearedMs = ofGetElapsedTimeMillis();
+    nTimeLastSeenMs = ofGetElapsedTimeMillis();
 }
 
 void ofxOpenFaceDataSingleFaceTracked::update(const ofxOpenFaceDataSingleFace& track) {
@@ -25,6 +26,7 @@ void ofxOpenFaceDataSingleFaceTracked::update(const ofxOpenFaceDataSingleFace& t
         return;
     }
     *this = ofxOpenFaceDataSingleFaceTracked(track);
+    nTimeLastSeenMs = ofGetElapsedTimeMillis();
 }
 
 void ofxOpenFaceDataSingleFaceTracked::kill() {
@@ -35,12 +37,16 @@ int ofxOpenFaceDataSingleFaceTracked::getAgeSeconds() const {
     return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000;
 }
 
+int ofxOpenFaceDataSingleFaceTracked::getLastSeenMs() const {
+    return (ofGetElapsedTimeMillis() - nTimeLastSeenMs) / 1000;
+}
+
 void ofxOpenFaceDataSingleFaceTracked::draw() {
     ofxOpenFaceDataSingleFace::draw(true);
     
     if (allLandmarks2D.size() > 0) {
         // Draw label and age
-        string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds()) + "s";
+        string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds()) + "s / Last seen: " + ofToString(getLastSeenMs()) + "s";
         // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
         cv::Point cvPt = allLandmarks2D.at(8);
         ofPoint ptChin(cvPt.x, cvPt.y);
