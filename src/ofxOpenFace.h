@@ -45,7 +45,6 @@ namespace ofxCv {
 #define OFX_OPENFACE_MODEL_CECLM "model/main_ceclm_general.txt" // Trained on in the wild, menpo and multi-pie data (a CE-CLM model)
 #define OFX_OPENFACE_MODEL_CLNF "model/main_clnf_general.txt" // Trained on in the wild and multi-pie data (a CLNF model)
 #define OFX_OPENFACE_MODEL_SVRCLM "model/main_clm_general.txt" // Trained on in the wild and multi-pie data (less accurate SVR/CLM model)
-//#define OFX_OPENFACE_MODEL_WILD "model/main_clm_wild.txt" // Trained on in-the-wild
 
 #define OFX_OPENFACE_DETECTOR_HAAR "classifiers/haarcascade_frontalface_alt.xml"
 #define OFX_OPENFACE_DETECTOR_MTCNN "model/mtcnn_detector/MTCNN_detector.txt"
