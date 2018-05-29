@@ -21,6 +21,9 @@ void ofxOpenFaceDataSingleFaceTracked::setup(const ofxOpenFaceDataSingleFace& tr
 }
 
 void ofxOpenFaceDataSingleFaceTracked::update(const ofxOpenFaceDataSingleFace& track) {
+    if (!track.detected) {
+        return;
+    }
     *this = ofxOpenFaceDataSingleFaceTracked(track);
 }
 
