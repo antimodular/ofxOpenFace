@@ -36,22 +36,14 @@ void ofApp::setup(){
     gui.setName("ofxOpenFace demo");
     gui.setHeaderBackgroundColor(ofColor::hotPink);
     gui.setDefaultWidth(300);
-    std::string sMethod = "Unknown";
-    if (settings.bMultipleFaces) {
-        if (settings.eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
-            sMethod = "HOG/SVM";
-        } else if (settings.eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR) {
-            sMethod = "MTCNN";
-        } else if (settings.eMethod == LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR) {
-            sMethod = "HAAR";
-        } else {
-            ofLogError("ofApp", "Unexpected value of detector method");
-        }
-    } else {
-        sMethod = "HOG/SVM (single face)";
-    }
-    gui.add(lblMultipleMethod.setup("Method", sMethod));
-    gui.add(lblSingleMultiple.setup("Mode", settings.bMultipleFaces ? "Multiple faces (" + ofToString(settings.nMaxFaces) + ")" : "Single face"));
+    
+    // Log the choice of detectors to the console
+    ofLogNotice("ofApp", "Face detector: " + ofxOpenFace::FaceDetectorToString(settings.eDetectorFace));
+    ofLogNotice("ofApp", "Landmark detector: " + ofxOpenFace::LandmarkDetectorToString(settings.eDetectorLandmarks));
+    
+    gui.add(lblDetectorFace.setup("Face Detector", ofxOpenFace::FaceDetectorToString(settings.eDetectorFace)));
+    gui.add(lblDetectorLandmarks.setup("Landmark Detector", ofxOpenFace::LandmarkDetectorToString(settings.eDetectorLandmarks)));
+    gui.add(lblSingleMultiple.setup("Mode", settings.bMultipleFaces ? "Multiple faces (max " + ofToString(settings.nMaxFaces) + ")" : "Single face"));
     gui.add(lblTrackingMethod.setup("Tracking method", settings.bDoCvTracking ? "Tracked" : "Raw"));
     gui.add(lblTrackingPersistence.setup("Tracking persistence", ofToString(settings.nTrackingPersistenceMs)));
     gui.add(lblTrackingMaxDistance.setup("Tracking max distance", ofToString(settings.nTrackingTolerancePx)));
@@ -74,7 +66,7 @@ void ofApp::setup(){
     camSettings.fy = settings.fy;
     camSettings.cx = settings.cx;
     camSettings.cy = settings.cy;
-    openFace.setup(settings.bMultipleFaces, settings.nCameraWidth, settings.nCameraHeight, settings.eMethod, camSettings, settings.nTrackingPersistenceMs, settings.nTrackingTolerancePx, settings.nMaxFaces);
+    openFace.setup(settings.bMultipleFaces, settings.nCameraWidth, settings.nCameraHeight, settings.eDetectorFace, settings.eDetectorLandmarks, camSettings, settings.nTrackingPersistenceMs, settings.nTrackingTolerancePx, settings.nMaxFaces);
     
     bDrawFaces = true;
     bOpenFaceEnabled = true;
@@ -220,7 +212,8 @@ void ofApp::loadSettings() {
     settings.fy = s.getValue("settings:camera:fy", 500);
     settings.cx = s.getValue("settings:camera:cx", settings.nCameraWidth/2.0f);
     settings.cy = s.getValue("settings:camera:cy", settings.nCameraHeight/2.0f);
-    settings.eMethod = (LandmarkDetector::FaceModelParameters::FaceDetector)s.getValue("settings:tracking:method", (int)LandmarkDetector::FaceModelParameters::FaceDetector::HAAR_DETECTOR);
+    settings.eDetectorFace = (LandmarkDetector::FaceModelParameters::FaceDetector)s.getValue("settings:tracking:detector:face", (int)LandmarkDetector::FaceModelParameters::FaceDetector::MTCNN_DETECTOR);
+    settings.eDetectorLandmarks = (LandmarkDetector::FaceModelParameters::LandmarkDetector)s.getValue("settings:tracking:detector:landmarks", (int)LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR);
 }
 
 void ofApp::saveSettings() {
@@ -232,7 +225,8 @@ void ofApp::saveSettings() {
     s.setValue("settings:tracking:doCvTracking", settings.bDoCvTracking);
     s.setValue("settings:tracking:multipleFaces", settings.bMultipleFaces);
     s.setValue("settings:tracking:maxFaces", settings.nMaxFaces);
-    s.setValue("settings:tracking:method", (int)settings.eMethod);
+    s.setValue("settings:tracking:detector:face", (int)settings.eDetectorFace);
+    s.setValue("settings:tracking:detector:landmarks", (int)settings.eDetectorLandmarks);
     s.setValue("settings:tracking:persistenceMs", settings.nTrackingPersistenceMs);
     s.setValue("settings:tracking:tolerancePixels", settings.nTrackingTolerancePx);
     s.setValue("settings:camera:fx", settings.fx);

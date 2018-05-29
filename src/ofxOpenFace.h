@@ -42,7 +42,11 @@ namespace ofxCv {
 
 // Some useful preprocessor definitions
 //#define OFX_OPENFACE_DO_FACE_ANALYSIS 1 // uncomment to do AU analysis
-#define OFX_OPENFACE_MODEL "model/main_ceclm_general.txt"
+#define OFX_OPENFACE_MODEL_CECLM "model/main_ceclm_general.txt" // Trained on in the wild, menpo and multi-pie data (a CE-CLM model)
+#define OFX_OPENFACE_MODEL_CLNF "model/main_clnf_general.txt" // Trained on in the wild and multi-pie data (a CLNF model)
+#define OFX_OPENFACE_MODEL_SVRCLM "model/main_clm_general.txt" // Trained on in the wild and multi-pie data (less accurate SVR/CLM model)
+//#define OFX_OPENFACE_MODEL_WILD "model/main_clm_wild.txt" // Trained on in-the-wild
+
 #define OFX_OPENFACE_DETECTOR_HAAR "classifiers/haarcascade_frontalface_alt.xml"
 #define OFX_OPENFACE_DETECTOR_MTCNN "model/mtcnn_detector/MTCNN_detector.txt"
 
@@ -56,7 +60,8 @@ class ofxOpenFace : public ofThread {
     
         ofxOpenFace();
         ~ofxOpenFace();
-        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eMethod, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
+        void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace,
+                   LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
         void setImage(ofImage img);
         vector<ofxOpenFaceDataSingleFaceTracked> getTracked();
 
@@ -64,6 +69,9 @@ class ofxOpenFace : public ofThread {
         void stop();
         void resetFaceModel();
         int getFPS();
+    
+        static string FaceDetectorToString(LandmarkDetector::FaceModelParameters::FaceDetector eValue);
+        static string LandmarkDetectorToString(LandmarkDetector::FaceModelParameters::LandmarkDetector eValue);
     
         // Events for the raw OpenFace data
         static ofEvent<ofxOpenFaceDataSingleFace>              eventOpenFaceDataSingleRaw;
@@ -77,8 +85,8 @@ class ofxOpenFace : public ofThread {
         static CameraSettings s_camSettings;
     
     private:
-        void setupSingleFace();
-        void setupMultipleFaces(LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
+        void setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector);
+        void setupMultipleFaces(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetector, LandmarkDetector::FaceModelParameters::FaceDetector eMethod);
         ofxOpenFaceDataSingleFace processImageSingleFace();
         vector<ofxOpenFaceDataSingleFace> processImageMultipleFaces();
         virtual void threadedFunction();

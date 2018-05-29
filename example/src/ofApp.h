@@ -18,7 +18,8 @@ class appSettings {
         int nTrackingPersistenceMs; // time allowed for tracking to forget an object
         int nTrackingTolerancePx; // pixels allowed to move for tracking to changes
         int fx, fy, cx, cy; // camera data
-        LandmarkDetector::FaceModelParameters::FaceDetector eMethod; // method for tracking
+        LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace; // face detector
+        LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks; // landmark detector
 };
 
 // The main app
@@ -66,7 +67,7 @@ class ofApp : public ofBaseApp{
         ofxLabel                                lblTrackingMethod;
         ofxLabel                                lblTrackingPersistence;
         ofxLabel                                lblTrackingMaxDistance;
-        ofxLabel                                lblMultipleMethod;
+        ofxLabel                                lblDetectorFace, lblDetectorLandmarks;
         ofxLabel                                lblCameraIndex;
         ofxLabel                                lblCameraDimensions;
         ofxLabel                                lblCameraSettings;
