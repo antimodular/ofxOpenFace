@@ -44,7 +44,8 @@ void ofApp::setup(){
     gui.add(lblDetectorFace.setup("Face Detector", ofxOpenFace::FaceDetectorToString(settings.eDetectorFace)));
     gui.add(lblDetectorLandmarks.setup("Landmark Detector", ofxOpenFace::LandmarkDetectorToString(settings.eDetectorLandmarks)));
     gui.add(lblSingleMultiple.setup("Mode", settings.bMultipleFaces ? "Multiple faces (max " + ofToString(settings.nMaxFaces) + ")" : "Single face"));
-    gui.add(lblTrackingMethod.setup("Tracking method", settings.bDoCvTracking ? "Tracked" : "Raw"));
+    gui.add(togDoTracking.setup("Do ofxCv tracking", settings.bDoCvTracking));
+    togDoTracking.addListener(this, &ofApp::onDoTrackingChanged);
     gui.add(lblTrackingPersistence.setup("Tracking persistence", ofToString(settings.nTrackingPersistenceMs)));
     gui.add(lblTrackingMaxDistance.setup("Tracking max distance", ofToString(settings.nTrackingTolerancePx)));
     gui.add(lblCameraDimensions.setup("Actual camera dimensions", ofToString(ptCameraDims.x) + "x" + ofToString(ptCameraDims.y)));
@@ -258,5 +259,21 @@ void ofApp::onFaceDataMultipleTracked(vector<ofxOpenFaceDataSingleFaceTracked> &
     mutexFaceData.lock();
     latestDataMultipleTracked = data;
     mutexFaceData.unlock();
+}
+
+void ofApp::onDoTrackingChanged(const void* sender, bool& pressed) {
+    // Remove existing listeners, add other ones
+    if (pressed) {
+        ofRemoveListener(ofxOpenFace::eventOpenFaceDataSingleRaw, this, &ofApp::onFaceDataSingleRaw);
+        ofRemoveListener(ofxOpenFace::eventOpenFaceDataMultipleRaw, this, &ofApp::onFaceDataMultipleRaw);
+        ofAddListener(ofxOpenFace::eventOpenFaceDataSingleTracked, this, &ofApp::onFaceDataSingleTracked);
+        ofAddListener(ofxOpenFace::eventOpenFaceDataMultipleTracked, this, &ofApp::onFaceDataMultipleTracked);
+    } else {
+        ofRemoveListener(ofxOpenFace::eventOpenFaceDataSingleTracked, this, &ofApp::onFaceDataSingleTracked);
+        ofRemoveListener(ofxOpenFace::eventOpenFaceDataMultipleTracked, this, &ofApp::onFaceDataMultipleTracked);
+        ofAddListener(ofxOpenFace::eventOpenFaceDataSingleRaw, this, &ofApp::onFaceDataSingleRaw);
+        ofAddListener(ofxOpenFace::eventOpenFaceDataMultipleRaw, this, &ofApp::onFaceDataMultipleRaw);
+    }
+    settings.bDoCvTracking = pressed;
 }
 

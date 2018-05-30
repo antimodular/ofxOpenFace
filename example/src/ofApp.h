@@ -64,13 +64,16 @@ class ofApp : public ofBaseApp{
         // For the single face GUI
         ofxPanel                                gui;
         ofxLabel                                lblSingleMultiple;
-        ofxLabel                                lblTrackingMethod;
+        ofxToggle                               togDoTracking;
         ofxLabel                                lblTrackingPersistence;
         ofxLabel                                lblTrackingMaxDistance;
         ofxLabel                                lblDetectorFace, lblDetectorLandmarks;
         ofxLabel                                lblCameraIndex;
         ofxLabel                                lblCameraDimensions;
         ofxLabel                                lblCameraSettings;
+    
+        // GUI callbacks
+        void onDoTrackingChanged(const void* sender, bool& pressed);
     
         appSettings                             settings;
     
