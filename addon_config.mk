@@ -15,12 +15,12 @@ common:
 	# specified here separated by spaces or one per line using +=
 	ADDON_INCLUDES = libs_openFace/FaceAnalyser/include
 	ADDON_INCLUDES += libs_openFace/GazeAnalyser/include
-    	ADDON_INCLUDES += libs_openFace/LandmarkDetector/include
-    	ADDON_INCLUDES += libs_openFace/Utilities/include
+	ADDON_INCLUDES += libs_openFace/LandmarkDetector/include
+	ADDON_INCLUDES += libs_openFace/Utilities/include
 	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
 	ADDON_INCLUDES += libs_others/dlib/include
-    	ADDON_INCLUDES += /usr/local/opt/openblas/include/
-    	ADDON_INCLUDES += /usr/local/include
+	ADDON_INCLUDES += /usr/local/opt/openblas/include
+	ADDON_INCLUDES += /usr/local/include
 	ADDON_INCLUDES += src
 
 	# any special flag that should be passed to the compiler when using this
@@ -75,10 +75,10 @@ android/armeabi-v7a:
 
 osx:
 	# Required libraries
-	ADDON_LIBS = libs_openFace/FaceAnalyser/lib/osx/libFaceAnalyser.a
-	ADDON_LIBS += libs_openFace/GazeAnalyser/lib/osx/libGazeAnalyser.a
-	ADDON_LIBS += libs_openFace/LandmarkDetector/lib/osx/libLandmarkDetector.a
-	ADDON_LIBS += libs_openFace/Utilities/lib/osx/libUtilities.a
+	ADDON_LIBS = libs_openFace/FaceAnalyser/lib/osx/Release/libFaceAnalyser.a
+	ADDON_LIBS += libs_openFace/GazeAnalyser/lib/osx/Release/libGazeAnalyser.a
+	ADDON_LIBS += libs_openFace/LandmarkDetector/lib/osx/Release/libLandmarkDetector.a
+	ADDON_LIBS += libs_openFace/Utilities/lib/osx/Release/libUtilities.a
 	ADDON_LIBS += libs_others/dlib/lib/osx/libdlib.a
 	ADDON_LIBS += /usr/local/opt/openblas/lib/libopenblas.a
 	ADDON_LIBS += /usr/local/lib/libopencv_calib3d.dylib
@@ -98,7 +98,7 @@ osx:
 	ADDON_LIBS += /usr/local/lib/libopencv_video.dylib
 	ADDON_LIBS += /usr/local/lib/libopencv_videoio.dylib
 	ADDON_LIBS += /usr/local/lib/libopencv_videostab.dylib
-    	ADDON_LIBS += /usr/local/lib/libtbb.dylib
+	ADDON_LIBS += /usr/local/lib/libtbb.dylib
 
 	#ADDON_AFTER = echo "Not implemented yet"
 ios:
