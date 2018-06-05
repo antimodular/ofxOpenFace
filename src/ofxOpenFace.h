@@ -62,6 +62,8 @@ class ofxOpenFace : public ofThread {
         ~ofxOpenFace();
         void setup(bool bTrackMultipleFaces, int nWidth, int nHeight, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace,
                    LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, CameraSettings settings, int persistenceMs, int maxDistancePx, int nMaxFacesTracked);
+        void setImage(ofPixels img);
+        void setImage(cv::Mat img);
         void setImage(ofImage img);
         vector<ofxOpenFaceDataSingleFaceTracked> getTracked();
 

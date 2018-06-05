@@ -345,13 +345,21 @@ vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
 }
 
 void ofxOpenFace::setImage(ofImage img) {
+    setImage(img.getPixels());
+}
+
+void ofxOpenFace::setImage(ofPixels img) {
+    setImage(ofxCv::toCv(img));
+}
+                      
+void ofxOpenFace::setImage(cv::Mat img) {
     mutexImage.lock();
     // Override the current "next image"
-    matToProcessColor = ofxCv::toCv(img.getPixels());
+    matToProcessColor = img;
     bHaveNewImage = true;
     mutexImage.unlock();
 }
-
+                      
 void ofxOpenFace::stop() {
     bExit = true;
     ofLogNotice("ofxOpenFace", "Stopping thread.");
