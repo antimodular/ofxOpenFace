@@ -19,6 +19,7 @@ common:
 	ADDON_INCLUDES += libs_openFace/Utilities/include
 	ADDON_INCLUDES += libs_others/dlib/include/dlib/all/source.cpp
 	ADDON_INCLUDES += libs_others/dlib/include
+	ADDON_INCLUDES += libs_others/tbb/include
 	ADDON_INCLUDES += /usr/local/opt/openblas/include
 	ADDON_INCLUDES += /usr/local/include
 	ADDON_INCLUDES += src
@@ -80,6 +81,7 @@ osx:
 	ADDON_LIBS += libs_openFace/LandmarkDetector/lib/osx/Release/libLandmarkDetector.a
 	ADDON_LIBS += libs_openFace/Utilities/lib/osx/Release/libUtilities.a
 	ADDON_LIBS += libs_others/dlib/lib/osx/libdlib.a
+	ADDON_LIBS += libs_others/tbb/lib/osx/libtbb.dylib
 	ADDON_LIBS += /usr/local/opt/openblas/lib/libopenblas.a
 	ADDON_LIBS += /usr/local/lib/libopencv_calib3d.dylib
 	ADDON_LIBS += /usr/local/lib/libopencv_core.dylib
