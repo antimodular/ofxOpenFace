@@ -82,9 +82,12 @@ class ofxOpenFace : public ofThread {
         // Events for the tracked OpenFace data
         static ofEvent<ofxOpenFaceDataSingleFaceTracked>              eventOpenFaceDataSingleTracked;
         static ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>>      eventOpenFaceDataMultipleTracked;
+        static ofEvent<bool>                                          eventOpenFaceDataClear; // no more faces
     
         // Camera settings
         static CameraSettings s_camSettings;
+        static float s_fCertaintyNorm; // the normalized certainty below which we ignore a face
+        static float s_nKillAfterDisappearedMs; // the time to wait before killing a face that has not reappared
     
     private:
         void setupSingleFace(LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks, LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace);

@@ -1,5 +1,7 @@
 #include "ofApp.h"
 
+#define OFAPP_TOLERANCE_THRESHOLD 0.6f // below that, ignored
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     // Set up the camera feed
@@ -48,11 +50,16 @@ void ofApp::setup(){
     togDoTracking.addListener(this, &ofApp::onDoTrackingChanged);
     gui.add(lblTrackingPersistence.setup("Tracking persistence", ofToString(settings.nTrackingPersistenceMs)));
     gui.add(lblTrackingMaxDistance.setup("Tracking max distance", ofToString(settings.nTrackingTolerancePx)));
+    gui.add(sliCertainty.setup("OpenFace certainty", settings.fCertaintyNorm, 0.0f, 1.0f));
+    sliCertainty.addListener(this, &ofApp::callbackCertaintyChanged);
+    gui.add(sliKillAfterNotSeenMs.setup("Kill after not seen (ms)", settings.nKillAfterDisappearedMs, 500, 4000));
+    sliKillAfterNotSeenMs.addListener(this, &ofApp::callbackKillAfterChanged);
     gui.add(lblCameraDimensions.setup("Actual camera dimensions", ofToString(ptCameraDims.x) + "x" + ofToString(ptCameraDims.y)));
     gui.add(lblCameraSettings.setup("Camera settings", "fx: " + ofToString(settings.fx) + " fy: " + ofToString(settings.fy) + " cx: " + ofToString(settings.cx) + " cy: " + ofToString(settings.cy)));
     gui.add(lblCameraIndex.setup("Camera index", ofToString(settings.nCameraIndex)));
     gui.setPosition(640, 0);
     
+    ofAddListener(ofxOpenFace::eventOpenFaceDataClear, this, &ofApp::onFaceDataClear);
     if (settings.bDoCvTracking) {
         ofAddListener(ofxOpenFace::eventOpenFaceDataSingleTracked, this, &ofApp::onFaceDataSingleTracked);
         ofAddListener(ofxOpenFace::eventOpenFaceDataMultipleTracked, this, &ofApp::onFaceDataMultipleTracked);
@@ -68,6 +75,8 @@ void ofApp::setup(){
     camSettings.cx = settings.cx;
     camSettings.cy = settings.cy;
     openFace.setup(settings.bMultipleFaces, settings.nCameraWidth, settings.nCameraHeight, settings.eDetectorFace, settings.eDetectorLandmarks, camSettings, settings.nTrackingPersistenceMs, settings.nTrackingTolerancePx, settings.nMaxFaces);
+    ofxOpenFace::s_fCertaintyNorm = settings.fCertaintyNorm;
+    ofxOpenFace::s_nKillAfterDisappearedMs = settings.nKillAfterDisappearedMs;
     
     bDrawFaces = true;
     bOpenFaceEnabled = true;
@@ -87,25 +96,34 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+    ofSetBackgroundColor(ofColor::black);
     ofSetColor(ofColor::white);
     imgToProcess.draw(0, 0);
     if (bDrawFaces && bOpenFaceEnabled) {
         if (settings.bDoCvTracking) {
             // draw the tracked faces
             if (!settings.bMultipleFaces) {
-                latestDataSingleTracked.draw();
+                if (!latestDataSingleTracked.cleared) {
+                    latestDataSingleTracked.draw(true);
+                }
             } else {
                 for (auto d : latestDataMultipleTracked) {
-                    d.draw();
+                    if (!d.cleared) {
+                        d.draw(true);
+                    }
                 }
             }
         } else {
             // draw the raw faces
             if (!settings.bMultipleFaces) {
-                latestDataSingle.draw();
+                if (!latestDataSingle.cleared) {
+                    latestDataSingle.draw(true);
+                }
             } else {
                 for (auto d : latestDataMultiple) {
-                    d.draw();
+                    if (!d.cleared) {
+                        d.draw(true);
+                    }
                 }
             }
         }
@@ -209,6 +227,8 @@ void ofApp::loadSettings() {
     settings.nMaxFaces = s.getValue("settings:tracking:maxFaces", 4);
     settings.nTrackingPersistenceMs = s.getValue("settings:tracking:persistenceMs", 30);
     settings.nTrackingTolerancePx = s.getValue("settings:tracking:tolerancePixels", 200);
+    settings.nKillAfterDisappearedMs = s.getValue("settings:tracking:killAfterDisappearedMs", 3000);
+    settings.fCertaintyNorm = s.getValue("settings:tracking:certainty", 0.4f);
     settings.fx = s.getValue("settings:camera:fx", 500);
     settings.fy = s.getValue("settings:camera:fy", 500);
     settings.cx = s.getValue("settings:camera:cx", settings.nCameraWidth/2.0f);
@@ -230,11 +250,32 @@ void ofApp::saveSettings() {
     s.setValue("settings:tracking:detector:landmarks", (int)settings.eDetectorLandmarks);
     s.setValue("settings:tracking:persistenceMs", settings.nTrackingPersistenceMs);
     s.setValue("settings:tracking:tolerancePixels", settings.nTrackingTolerancePx);
+    s.setValue("settings:tracking:killAfterDisappearedMs", settings.nKillAfterDisappearedMs);
+    s.setValue("settings:tracking:certainty", settings.fCertaintyNorm);
     s.setValue("settings:camera:fx", settings.fx);
     s.setValue("settings:camera:fy", settings.fy);
     s.setValue("settings:camera:cx", settings.cx);
     s.setValue("settings:camera:cy", settings.cy);
     s.saveFile("settings.xml"); //puts settings.xml file in the bin/data folder
+}
+
+void ofApp::onFaceDataClear(bool& data) {
+    mutexFaceData.lock();
+    if (settings.bMultipleFaces) {
+        // TODO: is it a good idea to clear the vectors?
+        if (settings.bDoCvTracking) {
+            latestDataMultipleTracked.clear();
+        } else {
+            latestDataMultiple.clear();
+        }
+    } else {
+        if (settings.bDoCvTracking) {
+            latestDataSingleTracked.cleared = true;
+        } else {
+            latestDataSingle.cleared = true;
+        }
+    }
+    mutexFaceData.unlock();
 }
 
 void ofApp::onFaceDataSingleRaw(ofxOpenFaceDataSingleFace& data) {
@@ -263,6 +304,9 @@ void ofApp::onFaceDataMultipleTracked(vector<ofxOpenFaceDataSingleFaceTracked> &
 
 void ofApp::onDoTrackingChanged(const void* sender, bool& pressed) {
     // Remove existing listeners, add other ones
+    ofRemoveListener(ofxOpenFace::eventOpenFaceDataClear, this, &ofApp::onFaceDataClear);
+    ofAddListener(ofxOpenFace::eventOpenFaceDataClear, this, &ofApp::onFaceDataClear);
+    
     if (pressed) {
         ofRemoveListener(ofxOpenFace::eventOpenFaceDataSingleRaw, this, &ofApp::onFaceDataSingleRaw);
         ofRemoveListener(ofxOpenFace::eventOpenFaceDataMultipleRaw, this, &ofApp::onFaceDataMultipleRaw);
@@ -277,3 +321,12 @@ void ofApp::onDoTrackingChanged(const void* sender, bool& pressed) {
     settings.bDoCvTracking = pressed;
 }
 
+void ofApp::callbackCertaintyChanged(float &value) {
+    ofxOpenFace::s_fCertaintyNorm = value;
+    settings.fCertaintyNorm = value;
+}
+
+void ofApp::callbackKillAfterChanged(int &value) {
+    ofxOpenFace::s_nKillAfterDisappearedMs = value;
+    settings.nKillAfterDisappearedMs = value;
+}

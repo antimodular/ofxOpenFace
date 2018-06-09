@@ -6,6 +6,7 @@
 // A class for storing the raw data from OpenFace for a single face
 class ofxOpenFaceDataSingleFace {
 public:
+    bool                    cleared = false; // ignore data if true
     bool                    detected = false;
     cv::Point3f             gazeLeftEye;
     cv::Point3f             gazeRightEye;

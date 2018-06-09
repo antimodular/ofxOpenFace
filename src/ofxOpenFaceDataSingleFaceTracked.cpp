@@ -1,4 +1,5 @@
 #include "ofxOpenFaceDataSingleFaceTracked.h"
+#include "ofxOpenFace.h"
 
 // Copy all data from the child class.
 ofxOpenFaceDataSingleFaceTracked::ofxOpenFaceDataSingleFaceTracked(const ofxOpenFaceDataSingleFace& d) {
@@ -22,31 +23,35 @@ void ofxOpenFaceDataSingleFaceTracked::setup(const ofxOpenFaceDataSingleFace& tr
 }
 
 void ofxOpenFaceDataSingleFaceTracked::update(const ofxOpenFaceDataSingleFace& track) {
-    if (!track.detected) {
-        return;
+    if (track.certainty >= ofxOpenFace::s_fCertaintyNorm) {
+        // Only update time seen if certainty is good enough
+        *this = ofxOpenFaceDataSingleFaceTracked(track);
+        nTimeLastSeenMs = ofGetElapsedTimeMillis();
     }
-    *this = ofxOpenFaceDataSingleFaceTracked(track);
-    nTimeLastSeenMs = ofGetElapsedTimeMillis();
 }
 
 void ofxOpenFaceDataSingleFaceTracked::kill() {
     dead = true;
 }
 
-int ofxOpenFaceDataSingleFaceTracked::getAgeSeconds() const {
-    return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000;
+float ofxOpenFaceDataSingleFaceTracked::getAgeSeconds() const {
+    return (ofGetElapsedTimeMillis() - nTimeAppearedMs) / 1000.0f;
 }
 
 int ofxOpenFaceDataSingleFaceTracked::getLastSeenMs() const {
-    return (ofGetElapsedTimeMillis() - nTimeLastSeenMs) / 1000;
+    return ofGetElapsedTimeMillis() - nTimeLastSeenMs;
 }
 
-void ofxOpenFaceDataSingleFaceTracked::draw() {
-    ofxOpenFaceDataSingleFace::draw(true);
+float ofxOpenFaceDataSingleFaceTracked::getLastSeenSecs() const {
+    return getLastSeenMs() / 1000.0f;
+}
+
+void ofxOpenFaceDataSingleFaceTracked::draw(bool bForceDraw) {
+    ofxOpenFaceDataSingleFace::draw(bForceDraw);
     
     if (allLandmarks2D.size() > 0) {
         // Draw label and age
-        string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds()) + "s / Last seen: " + ofToString(getLastSeenMs()) + "s";
+        string s = "Label: " + ofToString(getLabel()) + " / Age: " + ofToString(getAgeSeconds(), 2) + "s / Last seen: " + ofToString(getLastSeenSecs(), 2) + "s";
         // See https://github.com/TadasBaltrusaitis/OpenFace/wiki/Output-Format for landmark indices
         cv::Point cvPt = allLandmarks2D.at(8);
         ofPoint ptChin(cvPt.x, cvPt.y);

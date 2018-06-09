@@ -17,6 +17,8 @@ class appSettings {
         int nMaxFaces;
         int nTrackingPersistenceMs; // time allowed for tracking to forget an object
         int nTrackingTolerancePx; // pixels allowed to move for tracking to changes
+        float fCertaintyNorm; // normalized certainty below which we do not recognize a face
+        int nKillAfterDisappearedMs; // time after which we forget a missing face
         int fx, fy, cx, cy; // camera data
         LandmarkDetector::FaceModelParameters::FaceDetector eDetectorFace; // face detector
         LandmarkDetector::FaceModelParameters::LandmarkDetector eDetectorLandmarks; // landmark detector
@@ -47,6 +49,7 @@ class ofApp : public ofBaseApp{
         void updateGUI();
         void loadSettings();
         void saveSettings();
+        void onFaceDataClear(bool& data);
         void onFaceDataSingleRaw(ofxOpenFaceDataSingleFace& data);
         void onFaceDataMultipleRaw(vector<ofxOpenFaceDataSingleFace>& data);
         void onFaceDataSingleTracked(ofxOpenFaceDataSingleFaceTracked& data);
@@ -71,6 +74,11 @@ class ofApp : public ofBaseApp{
         ofxLabel                                lblCameraIndex;
         ofxLabel                                lblCameraDimensions;
         ofxLabel                                lblCameraSettings;
+        ofxFloatSlider                          sliCertainty;
+        ofxIntSlider                            sliKillAfterNotSeenMs;
+    
+        void callbackCertaintyChanged(float &value);
+        void callbackKillAfterChanged(int &value);
     
         // GUI callbacks
         void onDoTrackingChanged(const void* sender, bool& pressed);

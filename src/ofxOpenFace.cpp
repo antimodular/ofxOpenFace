@@ -4,9 +4,12 @@
 ofEvent<ofxOpenFaceDataSingleFace> ofxOpenFace::eventOpenFaceDataSingleRaw = ofEvent<ofxOpenFaceDataSingleFace>();
 ofEvent<vector<ofxOpenFaceDataSingleFace>> ofxOpenFace::eventOpenFaceDataMultipleRaw = ofEvent<vector<ofxOpenFaceDataSingleFace>>();
 ofEvent<ofxOpenFaceDataSingleFaceTracked> ofxOpenFace::eventOpenFaceDataSingleTracked = ofEvent<ofxOpenFaceDataSingleFaceTracked>();
+ofEvent<bool> ofxOpenFace::eventOpenFaceDataClear = ofEvent<bool>();
 ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>> ofxOpenFace::eventOpenFaceDataMultipleTracked = ofEvent<vector<ofxOpenFaceDataSingleFaceTracked>>();
 
 ofxOpenFace::CameraSettings ofxOpenFace::s_camSettings;
+float ofxOpenFace::s_fCertaintyNorm = 0.4f; // the normalized certainty below which we ignore a face
+float ofxOpenFace::s_nKillAfterDisappearedMs = 2000; // the time to wait before killing a face that has not reappared
 
 string ofxOpenFace::FaceDetectorToString(LandmarkDetector::FaceModelParameters::FaceDetector eValue) {
     string sResult = "Unknown";
@@ -400,7 +403,13 @@ void ofxOpenFace::threadedFunction() {
                 // Raise the event for the updated faces
                 ofNotifyEvent(eventOpenFaceDataMultipleRaw, v);
                 // Raise the event for the tracked faces
-                ofNotifyEvent(eventOpenFaceDataMultipleTracked, tracker.getFollowers());
+                if (tracker.getFollowers().size() > 0) {
+                    ofNotifyEvent(eventOpenFaceDataMultipleTracked, tracker.getFollowers());
+                } else {
+                    // Clear tracked
+                    bool val = true;
+                    ofNotifyEvent(eventOpenFaceDataClear, val);
+                }
             } else {
                 auto d = processImageSingleFace();
                 // Update the tracker
@@ -411,7 +420,18 @@ void ofxOpenFace::threadedFunction() {
                 ofNotifyEvent(eventOpenFaceDataSingleRaw, d);
                 // Raise the event for the tracked faces
                 if (tracker.getFollowers().size() > 0) {
-                    ofNotifyEvent(eventOpenFaceDataSingleTracked, tracker.getFollowers().front());
+                    auto follower = tracker.getFollowers().front();
+                    if (follower.getLastSeenMs() > s_nKillAfterDisappearedMs) {
+                        // Clear tracked
+                        bool val = true;
+                        ofNotifyEvent(eventOpenFaceDataClear, val);
+                    } else {
+                        ofNotifyEvent(eventOpenFaceDataSingleTracked, follower);
+                    }
+                } else {
+                    // Clear tracked
+                    bool val = true;
+                    ofNotifyEvent(eventOpenFaceDataClear, val);
                 }
             }
             bHaveNewImage = false; // ready for a new image
