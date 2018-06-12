@@ -23,8 +23,18 @@ void ofxOpenFaceDataSingleFaceTracked::setup(const ofxOpenFaceDataSingleFace& tr
 
 void ofxOpenFaceDataSingleFaceTracked::update(const ofxOpenFaceDataSingleFace& track) {
     if (track.certainty >= ofxOpenFace::s_fCertaintyNorm) {
+        // Remember those values
+        auto nTimeAppearedMsPrevious = nTimeAppearedMs;
+        auto nTimeLastSeenMsPrevious = nTimeLastSeenMs;
         // Only update time seen if certainty is good enough
         *this = ofxOpenFaceDataSingleFaceTracked(track);
+        nTimeAppearedMs = nTimeAppearedMsPrevious; // keep previous value
+        // Did it reappear after having disappeared?
+        auto timeSinceLastSeenMs = ofGetElapsedTimeMillis() - nTimeLastSeenMsPrevious;
+        if (timeSinceLastSeenMs > ofxOpenFace::s_nKillAfterDisappearedMs) {
+            // Refresh time appeared
+            nTimeAppearedMs = ofGetElapsedTimeMillis();
+        }
         nTimeLastSeenMs = ofGetElapsedTimeMillis();
     }
 }
