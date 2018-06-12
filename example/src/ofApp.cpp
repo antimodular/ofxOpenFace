@@ -98,6 +98,8 @@ void ofApp::setup(){
     
     bDrawFaces = true;
     bOpenFaceEnabled = true;
+    ofSetFrameRate(settings.nAppFrameRate);
+    ofLogNotice("ofApp", "Application frame rate: " + ofToString(settings.nAppFrameRate));
 }
 
 //--------------------------------------------------------------
@@ -247,6 +249,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::loadSettings() {
     ofxXmlSettings s;
     s.loadFile("settings.xml");
+    settings.nAppFrameRate = s.getValue("settings:app:framerate", 30);
     settings.nCameraIndex = s.getValue("settings:camera:index", 0);
     settings.nCameraFrameRate = s.getValue("settings:camera:framerate", 30);
     settings.nCameraWidth = s.getValue("settings:camera:width", 640);
@@ -268,6 +271,7 @@ void ofApp::loadSettings() {
 
 void ofApp::saveSettings() {
     ofxXmlSettings s;
+    s.setValue("settings:app:framerate", settings.nAppFrameRate);
     s.setValue("settings:camera:index", settings.nCameraIndex);
     s.setValue("settings:camera:framerate", settings.nCameraFrameRate);
     s.setValue("settings:camera:width", settings.nCameraWidth);

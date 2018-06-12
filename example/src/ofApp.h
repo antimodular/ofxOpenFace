@@ -8,6 +8,7 @@
 // The application settings
 class appSettings {
     public:
+        int nAppFrameRate; // the application frame rate
         int nCameraIndex;
         int nCameraWidth;
         int nCameraHeight;
