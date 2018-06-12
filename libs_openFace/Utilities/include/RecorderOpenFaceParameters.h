@@ -12,22 +12,22 @@
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
 //
-//       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency
-//       in IEEE Winter Conference on Applications of Computer Vision, 2016  
+//       OpenFace 2.0: Facial Behavior Analysis Toolkit
+//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//
+//       Convolutional experts constrained local model for facial landmark detection.
+//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
 //       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
-//       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
+//       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
 //       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
-//
-//       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency. 
-//       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -56,7 +56,7 @@ namespace Utilities
 		RecorderOpenFaceParameters(std::vector<std::string> &arguments, bool sequence, bool is_from_webcam, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 		RecorderOpenFaceParameters(bool sequence, bool is_from_webcam, bool output_2D_landmarks, bool output_3D_landmarks,
 			bool output_model_params, bool output_pose, bool output_AUs, bool output_gaze, bool output_hog, bool output_tracked,
-			bool output_aligned_faces, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
+			bool output_aligned_faces, bool record_bad = true, float fx = -1, float fy = -1, float cx = -1, float cy = -1, double fps_vid_out = 30);
 
 		bool isSequence() const { return is_sequence; }
 		bool isFromWebcam() const { return is_from_webcam; }
@@ -71,6 +71,8 @@ namespace Utilities
 		bool outputAlignedFaces() const { return output_aligned_faces; }
 		std::string outputCodec() const { return output_codec; }
 		double outputFps() const { return fps_vid_out; }
+
+		bool outputBadAligned() const { return record_aligned_bad; }
 
 		float getFx() const { return fx; }
 		float getFy() const { return fy; }
@@ -98,6 +100,9 @@ namespace Utilities
 		bool output_tracked;
 		bool output_aligned_faces;
 		
+		// Should the algined faces be recorded even if the detection failed (blank images)
+		bool record_aligned_bad;
+
 		// Some video recording parameters
 		std::string output_codec;
 		double fps_vid_out;

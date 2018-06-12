@@ -13,22 +13,22 @@
 //       not limited to academic journal and conference publications, technical
 //       reports and manuals, must cite at least one of the following works:
 //
-//       OpenFace: an open source facial behavior analysis toolkit
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency
-//       in IEEE Winter Conference on Applications of Computer Vision, 2016  
+//       OpenFace 2.0: Facial Behavior Analysis Toolkit
+//       Tadas Baltrušaitis, Amir Zadeh, Yao Chong Lim, and Louis-Philippe Morency
+//       in IEEE International Conference on Automatic Face and Gesture Recognition, 2018  
+//
+//       Convolutional experts constrained local model for facial landmark detection.
+//       A. Zadeh, T. Baltrušaitis, and Louis-Philippe Morency,
+//       in Computer Vision and Pattern Recognition Workshops, 2017.    
 //
 //       Rendering of Eyes for Eye-Shape Registration and Gaze Estimation
 //       Erroll Wood, Tadas Baltrušaitis, Xucong Zhang, Yusuke Sugano, Peter Robinson, and Andreas Bulling 
 //       in IEEE International. Conference on Computer Vision (ICCV),  2015 
 //
-//       Cross-dataset learning and person-speci?c normalisation for automatic Action Unit detection
+//       Cross-dataset learning and person-specific normalisation for automatic Action Unit detection
 //       Tadas Baltrušaitis, Marwa Mahmoud, and Peter Robinson 
 //       in Facial Expression Recognition and Analysis Challenge, 
 //       IEEE International Conference on Automatic Face and Gesture Recognition, 2015 
-//
-//       Constrained Local Neural Fields for robust facial landmark detection in the wild.
-//       Tadas Baltrušaitis, Peter Robinson, and Louis-Philippe Morency. 
-//       in IEEE Int. Conference on Computer Vision Workshops, 300 Faces in-the-Wild Challenge, 2013.    
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -78,14 +78,10 @@ namespace LandmarkDetector
 		// The actual response computation from intensity image
 		void Response(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response);
 
-		// Faster version of the response that only considers a subset of the area_of_interest
-		void ResponseSparse(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
-
-		// To save memory use a mirrored version of the expert instead of storing the weights
-		void ResponseSparse_mirror(const cv::Mat_<float> &area_of_interest, cv::Mat_<float> &response, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc);
+		void ResponseInternal(cv::Mat_<float>& response);
 
 		// For frontal faces can apply mirrored and non-mirrored experts at the same time
-		void ResponseSparse_mirror_joint(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right);
+		void ResponseSparse(const cv::Mat_<float> &area_of_interest_left, const cv::Mat_<float> &area_of_interest_right, cv::Mat_<float> &response_left, cv::Mat_<float> &response_right, cv::Mat_<float>& mapMatrix, cv::Mat_<float>& im2col_prealloc_left, cv::Mat_<float>& im2col_prealloc_right);
 
 	};
 

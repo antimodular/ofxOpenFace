@@ -15,7 +15,6 @@ ofxOpenFaceDataSingleFaceTracked::ofxOpenFaceDataSingleFaceTracked(const ofxOpen
     this->sFaceID = d.sFaceID;
 }
 
-// Tracker classes
 void ofxOpenFaceDataSingleFaceTracked::setup(const ofxOpenFaceDataSingleFace& track) {
     *this = ofxOpenFaceDataSingleFaceTracked(track);
     nTimeAppearedMs = ofGetElapsedTimeMillis();
