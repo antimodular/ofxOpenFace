@@ -3,5 +3,8 @@ example/bin/*.app/*
 example/bin/*.app/*
 example/bin/data/model/patch_experts/cen_*.mat
 example/bin/data/model/patch_experts/cen_*.dat
-
 example/bin/data/settings.xml
+example/bin/data/*.mpg
+example/bin/data/*.mpeg
+example/bin/data/*.mp4
+example/bin/data/*.mov

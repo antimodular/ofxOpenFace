@@ -66,6 +66,7 @@ class ofApp : public ofBaseApp{
     
         // For the single face GUI
         ofxPanel                                gui;
+        ofxLabel                                lblWebcam;
         ofxLabel                                lblSingleMultiple;
         ofxToggle                               togDoTracking;
         ofxLabel                                lblTrackingPersistence;
@@ -88,4 +89,8 @@ class ofApp : public ofBaseApp{
         // Some options
         bool                                    bDrawFaces; // draw the faces
         bool                                    bOpenFaceEnabled; // false: disable OpenFace
+    
+        // A video player
+        ofVideoPlayer                           videoPlayer;
+        bool                                    bUseVideoFile = false; // true when using a local file instead of the webcam
 };

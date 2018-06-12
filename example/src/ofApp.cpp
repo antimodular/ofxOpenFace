@@ -43,6 +43,24 @@ void ofApp::setup(){
     ofLogNotice("ofApp", "Face detector: " + ofxOpenFace::FaceDetectorToString(settings.eDetectorFace));
     ofLogNotice("ofApp", "Landmark detector: " + ofxOpenFace::LandmarkDetectorToString(settings.eDetectorLandmarks));
     
+    // Is there a video file to play?
+    ofDirectory dirVideos(""); // the root data folder
+    dirVideos.allowExt("mp4");
+    dirVideos.allowExt("mov");
+    dirVideos.allowExt("mpg");
+    dirVideos.allowExt("mpeg");
+    dirVideos.listDir();
+    if (dirVideos.size() == 0) {
+        ofLogNotice("ofApp", "No video files found, the app will run in webcam mode.");
+    } else {
+        bUseVideoFile = true;
+        auto vid = dirVideos[0];
+        videoPlayer.load(vid.getAbsolutePath());
+        videoPlayer.play();
+        ofLogNotice("ofApp", "Loading video file '" + vid.getAbsolutePath() + "'");
+    }
+    
+    gui.add(lblWebcam.setup("Webcam/video", bUseVideoFile ? "video" : "webcam"));
     gui.add(lblDetectorFace.setup("Face Detector", ofxOpenFace::FaceDetectorToString(settings.eDetectorFace)));
     gui.add(lblDetectorLandmarks.setup("Landmark Detector", ofxOpenFace::LandmarkDetectorToString(settings.eDetectorLandmarks)));
     gui.add(lblSingleMultiple.setup("Mode", settings.bMultipleFaces ? "Multiple faces (max " + ofToString(settings.nMaxFaces) + ")" : "Single face"));
@@ -84,12 +102,23 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    vidGrabber.update();
-    if(vidGrabber.isFrameNew()) {
-        ofPixels& pixels = vidGrabber.getPixels();
-        imgToProcess.setFromPixels(pixels);
-        if (bOpenFaceEnabled) {
-            openFace.setImage(imgToProcess);
+    if (bUseVideoFile) {
+        videoPlayer.update();
+        if(videoPlayer.isFrameNew()) {
+            ofPixels& pixels = videoPlayer.getPixels();
+            imgToProcess.setFromPixels(pixels);
+            if (bOpenFaceEnabled) {
+                openFace.setImage(imgToProcess);
+            }
+        }
+    } else {
+        vidGrabber.update();
+        if(vidGrabber.isFrameNew()) {
+            ofPixels& pixels = vidGrabber.getPixels();
+            imgToProcess.setFromPixels(pixels);
+            if (bOpenFaceEnabled) {
+                openFace.setImage(imgToProcess);
+            }
         }
     }
 }
