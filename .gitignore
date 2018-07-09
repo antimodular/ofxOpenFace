@@ -8,3 +8,4 @@ example/bin/data/*.mpg
 example/bin/data/*.mpeg
 example/bin/data/*.mp4
 example/bin/data/*.mov
+*.mpg
