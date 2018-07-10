@@ -54,13 +54,10 @@ namespace LandmarkDetector
 	// Max pooling layer with parametrized stride and kernel sizes
 	void max_pooling(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, int stride_x, int stride_y, int kernel_size_x, int kernel_size_y);
 
-	// Convolution using FFT optimization rather than matrix multiplication
+	// Convolution using FFT optimization rather than matrix multiplication, TODO do these still work
 	void convolution_fft2(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const std::vector<std::vector<cv::Mat_<float> > >& kernels, const std::vector<float >& biases, vector<map<int, vector<cv::Mat_<double> > > >& precomp_dfts);
 	
-	// Convolution using matrix multiplication and OpenBLAS optimization
-	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k);
-
-	// Convolution using matrix multiplication and OpenBLAS optimization (non thread safe but faster)
-	void convolution_direct_blas_nts(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col);
+	// Convolution using matrix multiplication and OpenBLAS optimization, can also provide a pre-allocated im2col result for faster processing
+	void convolution_direct_blas(std::vector<cv::Mat_<float> >& outputs, const std::vector<cv::Mat_<float> >& input_maps, const cv::Mat_<float>& weight_matrix, int height_k, int width_k, cv::Mat_<float>& pre_alloc_im2col);
 }
 #endif

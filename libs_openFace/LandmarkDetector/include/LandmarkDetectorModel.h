@@ -39,9 +39,6 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/objdetect.hpp>
 
-// OpenBLAS
-#include <cblas.h>
-
 // dlib dependencies for face detection
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/opencv.h>
