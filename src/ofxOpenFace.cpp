@@ -93,18 +93,14 @@ void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::Landmar
     }
     
     if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCLM.getAbsolutePath());
     } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CECLM);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCECLM.getAbsolutePath());
     } else {
         ofLogError("ofxOpenFace", "Unknown landmark detector '" + ofToString((int)eDetectorLandmarks) + "'. Defaulting to CLNF");
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     }
     
     if (!pFace_model->eye_model) {
@@ -153,14 +149,11 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Land
     
     // The modules that are being used for tracking
     if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_SVRCLM);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCLM.getAbsolutePath());
     } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CECLM_DETECTOR) {
-        ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CECLM);
-        pFace_model = new LandmarkDetector::CLNF(fModel.getAbsolutePath());
+        pFace_model = new LandmarkDetector::CLNF(fModelCECLM.getAbsolutePath());
     } else {
         ofLogError("ofxOpenFace", "Unknown landmark detector '" + ofToString((int)eDetectorLandmarks) + "'. Defaulting to CLNF");
         ofFile fModel = ofFile(OFX_OPENFACE_MODEL_CLNF);
