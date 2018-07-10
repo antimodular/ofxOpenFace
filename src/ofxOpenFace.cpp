@@ -216,7 +216,8 @@ void ofxOpenFace::setupMultipleFaces(LandmarkDetector::FaceModelParameters::Land
 ofxOpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
     // Reading the images
     mutexImage.lock();
-    cv::Mat rgb_image = matToProcessColor;
+    cv::Mat rgb_image;
+    matToProcessColor.copyTo(rgb_image);
     cv::Mat grayscale_image;
     ofxCv::copyGray(rgb_image, grayscale_image);
     mutexImage.unlock();
@@ -256,7 +257,8 @@ ofxOpenFaceDataSingleFace ofxOpenFace::processImageSingleFace() {
 vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
     // Reading the images
     mutexImage.lock();
-    cv::Mat rgb_image = matToProcessColor;
+    cv::Mat rgb_image;
+    matToProcessColor.copyTo(rgb_image);
     cv::Mat grayscale_image;
     ofxCv::copyGray(rgb_image, grayscale_image);
     mutexImage.unlock();
@@ -347,6 +349,7 @@ vector<ofxOpenFaceDataSingleFace> ofxOpenFace::processImageMultipleFaces() {
         vData[model].sFaceID = ofToString(model + 1);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeLeftEye, s_camSettings.fx, s_camSettings.fy, s_camSettings.cx, s_camSettings.cy, true);
         GazeAnalysis::EstimateGaze(vFace_models[model], vData[model].gazeRightEye, s_camSettings.fx, s_camSettings.fy, s_camSettings.cx, s_camSettings.cy, false);
+        
         
         // Figure out the bounding box of all landmarks
         vector<ofPoint> vLandmarks2D;
