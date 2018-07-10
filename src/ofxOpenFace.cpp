@@ -99,6 +99,23 @@ void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::Landmar
         det_parameters.reinit_video_every = -1;
     }
     
+    
+#ifdef OFX_OPENFACE_DO_FACE_ANALYSIS
+    // The face analysis logic
+    string rootDir = ofFilePath::getAbsolutePath("");
+    ofLogNotice("ofxOpenFace", "Face analysis root dir: '" + rootDir + "'");
+    pFace_analysis_params = new FaceAnalysis::FaceAnalyserParameters(rootDir);
+    pFace_analysis_params->OptimizeForImages();
+    pFace_analyser = new FaceAnalysis::FaceAnalyser(*pFace_analysis_params);
+    
+    ofLogNotice("ofxOpenFace", "Face analysis model location: '" + pFace_analysis_params->getModelLoc() + "'");
+    
+    if (pFace_analyser->GetAUClassNames().size() == 0 && pFace_analyser->GetAUClassNames().size() == 0)
+    {
+        ofLogWarning("ofxOpenFace", "No Action Unit models found.");
+    }
+#endif
+    
     if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLNF_DETECTOR) {
         pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     } else if (eDetectorLandmarks == LandmarkDetector::FaceModelParameters::LandmarkDetector::CLM_DETECTOR) {
