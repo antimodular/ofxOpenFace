@@ -86,6 +86,13 @@ void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::Landmar
     ofFile fDetectorHAAR = ofFile(OFX_OPENFACE_DETECTOR_HAAR);
     ofFile fDetectorMTCNN = ofFile(OFX_OPENFACE_DETECTOR_MTCNN);
     
+    if (!fDetectorHAAR.exists()) {
+        ofLogError("ofxOpenFace", "HAAR detector doesn't exist at '" + fDetectorHAAR.getAbsolutePath() + "'");
+    }
+    if (!fDetectorMTCNN.exists()) {
+        ofLogError("ofxOpenFace", "MTCNN detector doesn't exist at '" + fDetectorMTCNN.getAbsolutePath() + "'");
+    }
+    
     det_parameters.curr_face_detector = eDetectorFace;
     det_parameters.curr_landmark_detector = eDetectorLandmarks;
     if (eDetectorFace == LandmarkDetector::FaceModelParameters::FaceDetector::HOG_SVM_DETECTOR) {
@@ -102,6 +109,11 @@ void ofxOpenFace::setupSingleFace(LandmarkDetector::FaceModelParameters::Landmar
         ofLogError("ofxOpenFace", "Unknown landmark detector '" + ofToString((int)eDetectorLandmarks) + "'. Defaulting to CLNF");
         pFace_model = new LandmarkDetector::CLNF(fModelCLNF.getAbsolutePath());
     }
+    
+    pFace_model->face_detector_HAAR.load(fDetectorHAAR.getAbsolutePath());
+    pFace_model->haar_face_detector_location = fDetectorHAAR.getAbsolutePath();
+    pFace_model->face_detector_MTCNN.Read(fDetectorMTCNN.getAbsolutePath());
+    pFace_model->mtcnn_face_detector_location = fDetectorMTCNN.getAbsolutePath();
     
     if (!pFace_model->eye_model) {
         ofLogError("ofxOpenFace", "No eye model found.");
