@@ -95,7 +95,7 @@ namespace Utilities
 		// Can be adjusted to show less confident frames
 		double visualisation_boundary = 0.4;
 
-	private:
+    //private: // my ass
 
 		// Temporary variables for visualization
 		cv::Mat captured_image; // out canvas
