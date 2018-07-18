@@ -5,6 +5,8 @@ The interface is also different from master. See `example` and `example_threaded
 
 ## Installation
 
+### Dependencies
+
 Use [homebrew](https://brew.sh) to install tbb, openblas and opencv:
 
 ```
@@ -14,6 +16,23 @@ Paste that at a Terminal prompt.
 
 This addon uses [ofxCv](https://github.com/kylemcdonald/ofxCv).
 
-The [model](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download) files needs to be manually downloaded and placed in `bin/data` folder (See [TadasBaltrusaitis/OpenFace/wiki/Model-download](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download)). Alternatively place them anywhere and set `model_location` of the `ofxOpenFace::SingleFace`/`ofxOpenFace::MultipleFace`. object.
+### Models
+
+#### Step 1: Download the models manually or automatically
+
+Download the `.dat` models from [TadasBaltrusaitis/OpenFace/wiki/Model-download](https://github.com/TadasBaltrusaitis/OpenFace/wiki/Model-download) and place into `example/bin/data/models/patch_experts` folder.
+
+OR
+
+from `example/bin/data` folder, run the following commands
+
+```
+brew install wget
+sh download_models.sh
+```
+
+#### Step 2: Locate the models for your project
+Copy the following three folders from `example/bin/data` into your `bin/data` folder: `AU_predictors`, `classifiers`, `models`. Alternatively place them anywhere and set `model_location` of the `ofxOpenFace::SingleFace`/`ofxOpenFace::MultipleFace` object.
+
 
 ![screenshot](screenshot.png)
