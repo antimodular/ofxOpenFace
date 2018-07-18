@@ -72,6 +72,7 @@ namespace ofxOpenFace{
             {
                 face_models.push_back(face_model);
                 active_models.push_back(false);
+            }for (int i = 0; i < num_faces_max; ++i){
                 faceData fd;
                 faces.push_back(fd);
             }
