@@ -24,22 +24,23 @@ void ofApp::draw(){
 #if OPENFACE_USE_MULTI
     // MULTI FACE USAGE:
     
-    oft.lock(); // lock the thread for reading
-    oft.pixels = grabber.getPixels(); // send the camera pixels to openFace
-    
-    // run on new frames only?
-    if (bRunNewFrameOnly){oft.bFrameNew = grabber.isFrameNew();}
-    
-    // draw camera
-    ofSetColor(255); grabber.draw(0,0);
-    
-    int cnt = 0; // face count
-    for (int i = 0; i < oft.openFace.faces.size(); i++){
-        
-        if (oft.openFace.faces[i].active){ // do something only when the face model is active
-            cnt += 1;
-            ofColor col = ofColor(255,i*255/(float)oft.openFace.num_faces_max,0);
-            oft.openFace.faces[i].draw(col); // draw debug
+    if(grabber.isInitialized()){
+        oft.lock(); // lock the thread for reading
+        oft.pixels = grabber.getPixels(); // send the camera pixels to openFace
+
+        // run on new frames only?
+        if (bRunNewFrameOnly){oft.bFrameNew = grabber.isFrameNew();}
+
+        // draw camera
+        ofSetColor(255); grabber.draw(0,0);
+
+        int cnt = 0; // face count
+        for (int i = 0; i < oft.openFace.faces.size(); i++){
+
+            if (oft.openFace.faces[i].active){ // do something only when the face model is active
+                cnt += 1;
+                ofColor col = ofColor(255,i*255/(float)oft.openFace.num_faces_max,0);
+                oft.openFace.faces[i].draw(col); // draw debug
             
 // Obtaining landmarks & other results
 //             cv::Vec6d pose        = oft.openFace.faces[i].pose;
@@ -75,19 +76,19 @@ void ofApp::draw(){
 #else
     // SINGLE FACE USAGE:
     
-    oft.lock(); // lock the thread for reading
-    oft.pixels = grabber.getPixels(); // send the camera pixels to openFace
-    
-    // run on new frames only?
-    if (bRunNewFrameOnly){oft.bFrameNew = grabber.isFrameNew();}
-    
-    // draw camera
-    ofSetColor(255); grabber.draw(0,0);
-    
-    // draw face debug
-    oft.openFace.face.draw();
-    
-    
+    if (grabber.isInitialized()){
+        oft.lock(); // lock the thread for reading
+        oft.pixels = grabber.getPixels(); // send the camera pixels to openFace
+
+        // run on new frames only?
+        if (bRunNewFrameOnly){oft.bFrameNew = grabber.isFrameNew();}
+
+        // draw camera
+        ofSetColor(255); grabber.draw(0,0);
+
+        // draw face debug
+        oft.openFace.face.draw();
+
 // Obtaining landmarks & other results
 //     cv::Vec6d pose        = oft.openFace.face.pose;
 //     cv::Point3f gaze0     = oft.openFace.face.gaze0;
@@ -97,13 +98,14 @@ void ofApp::draw(){
 //     for (int ind = 0; ind < OPENFACE_N_KEYPOINTS; ind ++){
 //         ofVec2f pt = oft.openFace.face.getLandmark(ind);
 //     }
-    
-    ofSetColor(255);
-    ofxCv::drawMat(oft.openFace.canvas,640,0,320,240);
-    ofDrawBitmapStringHighlight("App FPS: "+ofToString(ofGetFrameRate()),0,20,ofColor(0),ofColor(255,255,0));
-    ofDrawBitmapStringHighlight("Tracker FPS: "+ofToString(oft.openFace.fps),0,40,ofColor(0),ofColor(255,255,0));
-    ofDrawBitmapStringHighlight("Certainty: "+ofToString(oft.openFace.face.certainty),0,60,ofColor(0),ofColor(255,255,0));
-    oft.unlock();
+
+        ofSetColor(255);
+        ofxCv::drawMat(oft.openFace.canvas,640,0,320,240);
+        ofDrawBitmapStringHighlight("App FPS: "+ofToString(ofGetFrameRate()),0,20,ofColor(0),ofColor(255,255,0));
+        ofDrawBitmapStringHighlight("Tracker FPS: "+ofToString(oft.openFace.fps),0,40,ofColor(0),ofColor(255,255,0));
+        ofDrawBitmapStringHighlight("Certainty: "+ofToString(oft.openFace.face.certainty),0,60,ofColor(0),ofColor(255,255,0));
+        oft.unlock();
+    }
 #endif
 }
 
