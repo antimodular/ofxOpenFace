@@ -51,28 +51,28 @@ void ofApp::draw(){
 //             for (int ind = 0; ind < OPENFACE_N_KEYPOINTS; ind ++){
 //                 ofVec2f pt = oft.openFace.faces[i].getLandmark(ind);
 //             }
-            
+            }
         }
+    
+        // send the faces to trackers
+        tkr.update(oft.openFace.faces);
+
+        // query the face tracker for face labels
+        for (int i = 0; i < tkr.tracked_faces.size(); i++){
+            ofDrawBitmapStringHighlight("#"+ofToString(tkr.tracked_faces[i].label),
+                                                       tkr.tracked_faces[i].currPos.x,
+                                                       tkr.tracked_faces[i].currPos.y,
+                                        ofColor(0),ofColor(255,255,0));
+        }
+
+        ofSetColor(255);
+        ofxCv::drawMat(oft.openFace.canvas,640,0,320,240);
+        ofDrawBitmapStringHighlight("App FPS: "+ofToString(ofGetFrameRate()),0,20,ofColor(0),ofColor(255,255,0));
+        ofDrawBitmapStringHighlight("Tracker FPS: "+ofToString(oft.openFace.fps),0,40,ofColor(0),ofColor(255,255,0));
+        ofDrawBitmapStringHighlight("Count: "+ofToString(cnt),0,60,ofColor(0),ofColor(255,255,0));
+
+        oft.unlock(); // release the lock for OpenFace
     }
-    
-    // send the faces to trackers
-    tkr.update(oft.openFace.faces);
-    
-    // query the face tracker for face labels
-    for (int i = 0; i < tkr.tracked_faces.size(); i++){
-        ofDrawBitmapStringHighlight("#"+ofToString(tkr.tracked_faces[i].label),
-                                                   tkr.tracked_faces[i].currPos.x,
-                                                   tkr.tracked_faces[i].currPos.y,
-                                    ofColor(0),ofColor(255,255,0));
-    }
-    
-    ofSetColor(255);
-    ofxCv::drawMat(oft.openFace.canvas,640,0,320,240);
-    ofDrawBitmapStringHighlight("App FPS: "+ofToString(ofGetFrameRate()),0,20,ofColor(0),ofColor(255,255,0));
-    ofDrawBitmapStringHighlight("Tracker FPS: "+ofToString(oft.openFace.fps),0,40,ofColor(0),ofColor(255,255,0));
-    ofDrawBitmapStringHighlight("Count: "+ofToString(cnt),0,60,ofColor(0),ofColor(255,255,0));
-    
-    oft.unlock(); // release the lock for OpenFace
 #else
     // SINGLE FACE USAGE:
     
